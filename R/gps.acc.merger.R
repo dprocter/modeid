@@ -22,7 +22,7 @@ gps.acc.merge<-function(accfile,gpsfile,participant.id){
   gps.data$date.time<-paste(gps.data$LOCAL.DATE,gps.data$LOCAL.TIME)
   gps.data$date.time<-strptime(gps.data$date.time,format="%Y/%m/%d %H:%M:%S")
   # round the gps timing to the nearest 10 seconds, so that we can match it with the accelerometry data
-  second(gps.data$date.time)<-round2(second(gps.data$date.time),-1)
+  second(gps.data$date.time)<-norm.round(second(gps.data$date.time),-1)
   gps.data$date.time.sec<-unclass(as.POSIXct(gps.data$date.time))
 
   # a variable that will house sum of the signal to noise ratio
