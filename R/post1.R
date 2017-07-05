@@ -27,7 +27,11 @@ post1<-function(pred.variable,dataset){
   # set the 0's back to NAS
   this.data$post[this.data$post==0]<-NA
   # convert the numeric back into a factor
-  this.data$post<-factor(this.data$post,labels=levels(this.data$pred))
+  this.data$post<-factor(this.data$post)
+  #assigned the original factor levels to the factor
+  # a somewhat convoluted method, which allows for the fact that you might have reduced the
+  # original number of factor levels
+  levels(this.data$post)<-levels(this.data$pred)[as.numeric(levels(this.data$post))]
 
   return(this.data$post)
 
