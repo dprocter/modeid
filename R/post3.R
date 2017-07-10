@@ -10,7 +10,7 @@ post3<-function(pred.variable,dataset){
 
   #identifies segment end points based on time
   this.data$seg.end<-numeric(length(this.data[,1]))
-  this.data$seg.end[this.data$time.since.last>=120]<-1
+  this.data$seg.end[this.data$time.since.last>=300]<-1
   #identifies a second end point, based on whether there is a change in predicted mode
   this.data$seg.end2<-numeric(length(this.data[,1]))
 
@@ -21,7 +21,7 @@ post3<-function(pred.variable,dataset){
 
   # if the next point doesn't show the same mode as the current point, mark a change in segment
   this.data$seg.end2[!is.na(this.data$pred) & !is.na(this.data$pred.next)
-                               & this.data$pred!=this.data$pred.next]<-1
+                     & this.data$pred!=this.data$pred.next]<-1
 
   # a loop that marks what segment you are on, dependent on the previous point and whether
   #the current point is a jounrey end
@@ -42,7 +42,7 @@ post3<-function(pred.variable,dataset){
     for (j.num in 2:max(this.data$segment)){
       prev.j<-subset(this.data,this.data$segment==j.num-1)
       this.j<-subset(this.data,this.data$segment==j.num)
-      if (length(this.j$pupilid)<13 & this.j$time.since.last[1]<130){
+      if (length(this.j$pupilid)<31 & this.j$time.since.last[1]<310){
         this.data$segment2[this.data$segment==j.num]<-prev.j$segment2[1]
       } else{
         this.data$segment2[this.data$segment==j.num]<-this.j$segment[1]
@@ -64,3 +64,4 @@ post3<-function(pred.variable,dataset){
   #return a variable, which is the most common mode in each journey
   return(this.data$seg.common)
 }
+
