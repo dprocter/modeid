@@ -1,4 +1,4 @@
-post2.test<-function(pred.variable,dataset){
+post2<-function(pred.variable,dataset){
 
   this.data<-dataset
   this.data$pred<-pred.variable
