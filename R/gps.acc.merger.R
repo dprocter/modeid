@@ -12,7 +12,7 @@ gps.acc.merge<-function(accfile,gpsfile,participant.id){
 
   acc.data<-read.csv(accfile,skip=10)
   acc.data$date.time<-seq(start.datetime, start.datetime+(length(acc.data$Axis1)-1)*10, 10)
-  acc.data$pupilid<-participant.id
+  acc.data$ID<-participant.id
   acc.data$date.time.sec<-unclass(as.POSIXct(acc.data$date.time))
 
   ###GPS
@@ -20,7 +20,7 @@ gps.acc.merge<-function(accfile,gpsfile,participant.id){
   gps.data$date.time<-paste(gps.data$LOCAL.DATE,gps.data$LOCAL.TIME)
   gps.data$date.time<-strptime(gps.data$date.time,format="%Y/%m/%d %H:%M:%S")
   # round the gps timing to the nearest 10 seconds, so that we can match it with the accelerometry data
-  second(gps.data$date.time)<-norm.round(second(gps.data$date.time),-1)
+  lubridate::second(gps.data$date.time)<-norm.round(second(gps.data$date.time),-1)
   gps.data$date.time.sec<-unclass(as.POSIXct(gps.data$date.time))
 
   # a variable that will house sum of the signal to noise ratio
@@ -58,7 +58,6 @@ gps.acc.merge<-function(accfile,gpsfile,participant.id){
   merged.data<-merge(acc.data,gps.data,by="date.time.sec",all.x = TRUE)
   merged.data<-subset(merged.data,select=-c(date.time.y))
   names(merged.data)[5]<-"date.time"
-  merged.data$ID<-participant.id
 
   return(merged.data)
 }

@@ -24,13 +24,19 @@ acc.nonwear<-function(dataset,epoch.length,window.length,interruption.length){
 
     merged.data$zero.counter[merged.data$non.zero.counter==0]<-1
 
+    # counting up the zeros from both left and right ensures the full hour is covered
     merged.data$window.zeros<-zoo::rollapply(merged.data$zero.counter,
-                                           (window.length*(60/epoch.length)),
-                                           align="right",partial=TRUE,FUN=sum)
+                                             (window.length*(60/epoch.length)),
+                                             align="right",partial=TRUE,FUN=sum)
+    merged.data$window.zeros2<-zoo::rollapply(merged.data$zero.counter,
+                                              (window.length*(60/epoch.length)),
+                                              align="left",partial=TRUE,FUN=sum)
 
     epoch.cutoff<-(window.length*(60/epoch.length))-(interruption.length*(60/epoch.length))
     merged.data$remove<-numeric(length(merged.data[,1]))
+    # mark a remove variable, which marks when there are more 0's in an hour than the cutoff
     merged.data$remove[merged.data$window.zeros >= epoch.cutoff]<-1
+    merged.data$remove[merged.data$window.zeros2 >= epoch.cutoff]<-1
 
     merged.data$Axis1[merged.data$remove==1]<-NA
 
@@ -42,7 +48,7 @@ acc.nonwear<-function(dataset,epoch.length,window.length,interruption.length){
       merged.data$Axis3[merged.data$remove==1]<-NA
     }
 
-    merged.data<-subset(merged.data,select=-c(non.zero.counter,zero.counter,window.zeros,remove))
+    merged.data<-subset(merged.data,select=-c(non.zero.counter,zero.counter,window.zeros,window.zeros2,remove))
 
     return(merged.data)
   }
