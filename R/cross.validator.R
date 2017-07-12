@@ -15,7 +15,7 @@ cross.validator<-function(training.dataset,formula,cv.marker){
     test<-subset(total.data,cv.marker==i)
 
     fit[[i]]<-randomForest::randomForest(formula,
-                                         data=reduced.train
+                                         data=reduced.train,importance=TRUE
     )
     pred[[i]]<-predict(fit[[i]],test)
     test$pred.mode<-predict(fit[[i]],test)

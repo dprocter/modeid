@@ -1,5 +1,5 @@
-# assumes your speed variable is called speed, and your HDOP variable is called hdop, if they aren't rename them fist
-#speed cutoff, neighbour.window and epoch length in seconds
+# assumes your speed variable is called speed, and your HDOP variable is called hdop, if they aren't rename them firt
+#neighbour.window and epoch length in seconds
 gps.cleaner<-function(speed.cutoff, hdop.cutoff, neighbour.number, neighbour.window, epoch.length, dataset){
   this.data<-dataset
   if (is.null(dataset$speed)){

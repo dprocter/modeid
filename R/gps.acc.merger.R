@@ -19,6 +19,7 @@ gps.acc.merge<-function(accfile,gpsfile,participant.id){
   gps.data<-read.csv(gpsfile)
   gps.data$date.time<-paste(gps.data$LOCAL.DATE,gps.data$LOCAL.TIME)
   gps.data$date.time<-strptime(gps.data$date.time,format="%Y/%m/%d %H:%M:%S")
+  gps.data$day<-lubridate::wday(gps.data$date.time, label = TRUE, abbr = FALSE)
   # round the gps timing to the nearest 10 seconds, so that we can match it with the accelerometry data
   lubridate::second(gps.data$date.time)<-norm.round(second(gps.data$date.time),-1)
   gps.data$date.time.sec<-unclass(as.POSIXct(gps.data$date.time))
@@ -51,8 +52,8 @@ gps.acc.merge<-function(accfile,gpsfile,participant.id){
     gps.data$spd[i]<-as.numeric(unlist(strsplit(as.character(gps.data$SPEED[i]),split=" "))[2])
   }
 
-  gps.data<-subset(gps.data,select=c(INDEX,date.time,date.time.sec,lat,long,spd,PDOP,HDOP,VDOP,sumsnr))
-  names(gps.data)<-c("index","date.time","date.time.sec","latitude","longitude","speed","pdop","hdop","vdop","sumsnr")
+  gps.data<-subset(gps.data,select=c(INDEX,date.time,day,date.time.sec,lat,long,spd,PDOP,HDOP,VDOP,sumsnr,LOCAL.DATE,LOCAL.TIME))
+  names(gps.data)<-c("index","date.time","day","date.time.sec","latitude","longitude","speed","pdop","hdop","vdop","sumsnr","date.txt","time.txt")
 
   #Stick the two together, kepping all accelerometer data, the missing GPS variables will be NA
   merged.data<-merge(acc.data,gps.data,by="date.time.sec",all.x = TRUE)
