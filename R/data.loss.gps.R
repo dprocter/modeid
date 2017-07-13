@@ -1,3 +1,23 @@
+#' @title Data loss due to GPS cleaning
+#' @description
+#' Returns a two column data.frame, with the data amount lost at each level
+#' of data cleaning, in epochs
+#' @param speed.cutoff
+#' The cut-off above which speed is deemed unreliable, in the same units as your speed variable
+#' @param hdop.cutoff
+#' THe cut-off above which your horizontal dilution of precision is deemed unreliable
+#' @param neighbour.number
+#' an integer: if you are removing isolated points, how few neighbours counts as isolated
+#' @param neighbour.window
+#' The width of a window in which to look for neighbours to define whether a point is
+#' isolated, in seconds
+#' @param dataset
+#' The dataset you need cleaned
+#' @details
+#' Set up exactly the same as \code{\link{gps.cleaner}}, this function
+#' tell you how much data you lose from cleaning the data with your given rules
+#'
+
 #for a file, returns two columns tellin you how many epochs you lost due to data cleaning
 #speed cutoff, neighbour.window and epoch length in seconds
 data.loss.gps<-function(speed.cutoff, hdop.cutoff, neighbour.number, neighbour.window, epoch.length, dataset){
@@ -21,5 +41,5 @@ data.loss.gps<-function(speed.cutoff, hdop.cutoff, neighbour.number, neighbour.w
   data.amounts<-c(all.data,gps.data,gps.data-gps.no.neighbours
                   ,gps.no.neighbours-removed.highspeed,removed.highspeed-removed.hdop)
 
-  return(cbind(labels,data.amounts))
+  return(data.frame(labels,data.amounts))
 }

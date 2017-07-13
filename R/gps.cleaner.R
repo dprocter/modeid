@@ -1,3 +1,26 @@
+#' @title Cleaning of GPS data
+#' @description Returns a data.frame in the same format as the input
+#' but with points deemed unreliable set as NA
+#' @param speed.cutoff
+#' The cut-off above which speed is deemed unreliable, in the same units as your speed variable
+#' @param hdop.cutoff
+#' THe cut-off above which your horizontal dilution of precision is deemed unreliable
+#' @param neighbour.number
+#' an integer: if you are removing isolated points, how few neighbours counts as isolated
+#' @param neighbour.window
+#' The width of a window in which to look for neighbours to define whether a point is
+#' isolated, in seconds
+#' @param dataset
+#' The dataset you need cleaned
+#' @return
+#' A data.frame in the same format as your input, but with GPS related variables set as NA
+#' @details
+#' Cleans unreliable points base on speed, HDOP and number of neighbours.
+#' Assumes you have used the \code{\link{gps.acc.merger}} function, and your data is set
+#' up in that manner. If you have not that is not a problem, but the function expects
+#' variables named "longitude","latitude","speed","hdop","pdop","vdop" and "sumsnr".
+#' If you want all of those things set as NA, you need the variables labelled correctly
+
 # assumes your speed variable is called speed, and your HDOP variable is called hdop, if they aren't rename them firt
 #neighbour.window and epoch length in seconds
 gps.cleaner<-function(speed.cutoff, hdop.cutoff, neighbour.number, neighbour.window, epoch.length, dataset){
@@ -18,8 +41,10 @@ gps.cleaner<-function(speed.cutoff, hdop.cutoff, neighbour.number, neighbour.win
     this.data$remove.me[this.data$hdop>hdop.cutoff & !is.na(this.data$speed)]<-1
 
     # effectively removes all marked points by setting their gps values as NA
-    this.data$easting[this.data$remove.me==1]<-NA
-    this.data$northing[this.data$remove.me==1]<-NA
+    this.data$longitude[this.data$remove.me==1]<-NA
+    this.data$latitude[this.data$remove.me==1]<-NA
+    #this.data$easting[this.data$remove.me==1]<-NA
+    #this.data$northing[this.data$remove.me==1]<-NA
     this.data$sumsnr[this.data$remove.me==1]<-NA
     this.data$pdop[this.data$remove.me==1]<-NA
     this.data$hdop[this.data$remove.me==1]<-NA

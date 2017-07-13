@@ -1,3 +1,20 @@
+#' @title Post processing,: neighbour matching
+#' @description Returns a variable, which has identified predicted points where
+#' one point is neighboured by two of a different mode. The central
+#' point is then set as the mode of it's neighbours
+#' @param pred.variable Which variable is you predicted mode,
+#' must be written in the format \code{dataset$pred.variable} if
+#' it is within the input data.frame
+#' @param dataset
+#' The data.frame you want post processing applied to
+#' @return
+#' A variable of travel mode, single mis-classifications removed
+#' @details
+#' If both of a points neighbours differ to the center point and
+#' are the same as one another, we assume that this is a prediction
+#' error. This function makes the center point the same as it's neighbours,
+#' providing they are the same as one another
+
 # post processing rule 1
 post1<-function(pred.variable,dataset){
   this.data<-dataset

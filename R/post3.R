@@ -1,3 +1,18 @@
+#' @title Post processing: segmentation
+#' @description
+#' post3 identifies segements in the data, then assessed if one predicted mode
+#' dominates this segement. If it does, post 3 sets the entire segement as
+#' that mode.
+#' @param pred.variable
+#' The variable containing predictions that you want to segment
+#' @param dataset
+#' the dataset your prediction is contained within
+#' @return
+#' A variable of post processed travel mode, in the same format as as
+#' \code{pred.variable}
+
+
+
 # the third stage of post processing, identify contiguous segments and set them to the same journey mode
 # segments are separated by gaps of two minutes between valid points or changed in predicted travel mode
 # which are constant for two minutes
