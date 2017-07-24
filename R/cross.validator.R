@@ -1,3 +1,4 @@
+#' @export
 #' @title Model cross-validation
 #' @description Returns a four column matrix, with as many rows as there are
 #' crossvalidation subsets.

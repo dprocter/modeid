@@ -1,3 +1,4 @@
+#' @export
 #' @title Data loss due to GPS cleaning
 #' @description
 #' Returns a two column data.frame, with the data amount lost at each level

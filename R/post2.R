@@ -7,7 +7,7 @@
 #6. examples
 
 
-
+#' @export
 #' @title Post processing: local patterns
 #' @description
 #' Returns a variable, which identifies over 50% of neighbours within 4 minutes

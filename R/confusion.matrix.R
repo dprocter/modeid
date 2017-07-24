@@ -1,3 +1,4 @@
+#' @export
 #' @title Confusion matrix
 #' @description
 #' Returns a confusion matrix, based on a predicted and observed variable

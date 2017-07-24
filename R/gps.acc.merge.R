@@ -1,6 +1,5 @@
 ####TO DO
-#1. Generalise to different epoch lengths
-#2. Generalise to different models
+#1. Generalise to different models
 
 
 #' @title Merging GPS and accelerometer files
@@ -28,6 +27,7 @@
 #if there are 8 days, drop the first day, if there are 7 days or less, keep all
 # Merges data from an actigraph gt3x+ accelerometer and a qstarz 1000xt GPS device
 #epoch length in seconds
+#' @export
 gps.acc.merge<-function(accfile, gpsfile, participant.id,
                         cutoff.method, epoch.length){
 

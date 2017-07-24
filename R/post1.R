@@ -1,3 +1,4 @@
+#' @export
 #' @title Post processing,: neighbour matching
 #' @description Returns a variable, which has identified predicted points where
 #' one point is neighboured by two of a different mode. The central

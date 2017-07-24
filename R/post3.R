@@ -1,3 +1,4 @@
+#' @export
 #' @title Post processing: segmentation
 #' @description
 #' post3 identifies segements in the data, then assessed if one predicted mode

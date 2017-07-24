@@ -2,6 +2,7 @@
 # add F1, and other model accuracy scores
 #link details to wiki page describing accuracy measures
 
+#' @export
 #' @title Model accuracy
 #' @description
 #' Returns model accuracy from a confusion matrix derived from

@@ -1,3 +1,4 @@
+#' @export
 #' @title Cleaning of GPS data
 #' @description Returns a data.frame in the same format as the input
 #' but with points deemed unreliable set as NA

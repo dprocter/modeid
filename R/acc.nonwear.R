@@ -2,6 +2,7 @@
 #If it hasn't, the accelerometer axes should be labelled "Axis1", "Axis2" etc...
 #It will work for 1, 2 or 3 axes
 #epoch.length in seconds, window length and interruption length in minutes
+
 #' @title   Identification of accelerometer non-wear time
 #' @description
 #' Returns a dataset in the same format as the input but with accelerometer non-wear
@@ -18,6 +19,7 @@
 #' @return A data.frame of the merged data that was input,
 #'  but with non wear time set as NA
 #'
+#' @export
 acc.nonwear<-function(dataset,epoch.length,window.length,interruption.length){
   merged.data<-dataset
 
