@@ -1,9 +1,6 @@
 #### TODO
-#1. make this take variable widths of window
-#2. make this take variable percentage of window
-#3. I don't think the dataset approach is necessary, remove it
+#1. make this for time windows, not continuous windows
 #4. make it run with factors or numeric
-#5. make this work for variable epochs
 #6. examples
 
 
@@ -14,11 +11,15 @@
 #' they are of the same mode, and switches the central point to that mode
 #' @param pred.variable
 #' The variable you want processed, a factor
-#' @param dataset
-#' the dataset this is based on
+#' @param epoch.length
+#' The length of the epoch you are using, in seconds
+#' @param window.width
+#' How wide a window you want to smooth, in seconds
+#' @param prop.agreement
+#' What proportion of that window you want to have the same mode
 #' @return
 #' A variable, of the same format as \code{pred.variable}, with all points made the same
-#' as those which have over 50% of points assigned to them within 4 minutes.
+#' as those which have over the specified proportion of the specified window.
 #' @details
 #' We assume that if one mode is dominant both before and after the central point,
 #' then that mode is likely what the central point should be. We therefore take a count of
@@ -26,21 +27,21 @@
 #' a single mode has over half the points within the window, then the central point it
 #' assigned to that mode.
 
-post2<-function(pred.variable,dataset){
-
-  this.data<-dataset
-  this.data$pred<-pred.variable
-  this.data$post<-pred.variable
+post2<-function(pred.variable, epoch.length, window.width, prop.agreement){
+  pred<-pred.variable
+  post<-pred.variable
 
   t.modes<-levels(pred.variable)
 
   for (i in 1:length(t.modes)){
-    this.mode.present<-numeric(length(this.data[,1]))
-    this.mode.present[this.data$pred==t.modes[i]]<-1
-    this.mode.counter<-zoo::rollapply(this.mode.present,width=25,align="center",FUN=sum,fill=NA)
+    this.mode.present<-numeric(length(pred))
+    this.mode.present[pred==t.modes[i]]<-1
+    this.mode.counter<-zoo::rollapply(this.mode.present,width= (window.width/epoch.length)+1 ,align="center",FUN=sum,fill=NA)
 
-    this.data$post[this.mode.counter>=12]<-t.modes[i]
+    agreement.epochs<-ceiling(prop.agreement*(window.width/epoch.length))
+    post[this.mode.counter>=agreement.epochs]<-t.modes[i]
   }
 
-  return(this.data$post)
+  return(post)
 }
+
