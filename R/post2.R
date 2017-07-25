@@ -1,16 +1,14 @@
 #### TODO
-#1. make this for time windows, not continuous windows
-#4. make it run with factors or numeric
-#6. examples
-
+#1. make this for time windows, not continuous windows. This might be doable using the index variable and foreach
+# however I don't want to have tp specify that much
 
 #' @export
 #' @title Post processing: local patterns
 #' @description
-#' Returns a variable, which identifies over 50% of neighbours within 4 minutes
-#' they are of the same mode, and switches the central point to that mode
+#' Returns a variable, which identifies the majority mode within a specified
+#' window and sets the center point as that mode
 #' @param pred.variable
-#' The variable you want processed, a factor
+#' The variable you want processed, either factor or numeric
 #' @param epoch.length
 #' The length of the epoch you are using, in seconds
 #' @param window.width
@@ -37,7 +35,12 @@ post2<-function(pred.variable, epoch.length, window.width, prop.agreement){
   pred<-pred.variable
   post<-pred.variable
 
-  t.modes<-levels(pred.variable)
+  if (is.numeric(pred.variable)){
+    t.modes<-as.numeric(levels(factor(pred)))
+  } else{
+    t.modes<-levels(pred.variable)
+  }
+
 
   for (i in 1:length(t.modes)){
     this.mode.present<-numeric(length(pred))
@@ -51,6 +54,3 @@ post2<-function(pred.variable, epoch.length, window.width, prop.agreement){
 
   return(post)
 }
-
-
-

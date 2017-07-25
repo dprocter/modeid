@@ -7,7 +7,7 @@
 post2(pred.variable, epoch.length, window.width, prop.agreement)
 }
 \arguments{
-\item{pred.variable}{The variable you want processed, a factor}
+\item{pred.variable}{The variable you want processed, either factor or numeric}
 
 \item{epoch.length}{The length of the epoch you are using, in seconds}
 
@@ -20,8 +20,8 @@ A variable, of the same format as \code{pred.variable}, with all points made the
 as those which have over the specified proportion of the specified window.
 }
 \description{
-Returns a variable, which identifies over 50% of neighbours within 4 minutes
-they are of the same mode, and switches the central point to that mode
+Returns a variable, which identifies the majority mode within a specified
+window and sets the center point as that mode
 }
 \details{
 We assume that if one mode is dominant both before and after the central point,
