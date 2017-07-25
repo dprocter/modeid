@@ -14,7 +14,7 @@
 #' @param epoch.length
 #' The length of the epoch you are using, in seconds
 #' @param window.width
-#' How wide a window you want to smooth, in seconds
+#' How wide a window you want to smooth, in seconds, centered on a point
 #' @param prop.agreement
 #' What proportion of that window you want to have the same mode
 #' @return
@@ -26,6 +26,12 @@
 #' each mode from two minutes before this point to two minutes after this point. If
 #' a single mode has over half the points within the window, then the central point it
 #' assigned to that mode.
+#' @examples
+#' eg.sequence<-rep(seq(1,3,1),each=6)
+#' eg.sequence[8:10]<-1
+#' eg.sequence<-factor(eg.sequence,labels=c("walk","run","cycle"))
+#' eg.sequence
+#' post2(pred.variable = eg.sequence, epoch.length = 10, window.width = 60, prop.agreement = 0.75)
 
 post2<-function(pred.variable, epoch.length, window.width, prop.agreement){
   pred<-pred.variable
@@ -36,6 +42,7 @@ post2<-function(pred.variable, epoch.length, window.width, prop.agreement){
   for (i in 1:length(t.modes)){
     this.mode.present<-numeric(length(pred))
     this.mode.present[pred==t.modes[i]]<-1
+    #the window width is 1 wider than the designated window width, in epochs
     this.mode.counter<-zoo::rollapply(this.mode.present,width= (window.width/epoch.length)+1 ,align="center",FUN=sum,fill=NA)
 
     agreement.epochs<-ceiling(prop.agreement*(window.width/epoch.length))
@@ -44,4 +51,6 @@ post2<-function(pred.variable, epoch.length, window.width, prop.agreement){
 
   return(post)
 }
+
+
 

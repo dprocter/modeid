@@ -4,14 +4,10 @@
 \alias{post1}
 \title{Post processing,: neighbour matching}
 \usage{
-post1(pred.variable, dataset)
+post1(pred.variable)
 }
 \arguments{
-\item{pred.variable}{Which variable is you predicted mode,
-must be written in the format \code{dataset$pred.variable} if
-it is within the input data.frame}
-
-\item{dataset}{The data.frame you want post processing applied to}
+\item{pred.variable}{The variable you wish to smooth}
 }
 \value{
 A variable of travel mode, single mis-classifications removed
@@ -26,4 +22,10 @@ If both of a points neighbours differ to the center point and
 are the same as one another, we assume that this is a prediction
 error. This function makes the center point the same as it's neighbours,
 providing they are the same as one another
+#' @examples
+eg.sequence<-rep(seq(1,3,1),each=6)
+eg.sequence[8:10]<-1
+eg.sequence<-factor(eg.sequence,labels=c("walk","run","cycle"))
+eg.sequence
+post1(pred.variable = eg.sequence, dataset = data.frame(eg.sequence))
 }

@@ -4,12 +4,18 @@
 \alias{post3}
 \title{Post processing: segmentation}
 \usage{
-post3(pred.variable, dataset)
+post3(pred.variable, dataset, window.width, segment.length, epoch.length)
 }
 \arguments{
 \item{pred.variable}{The variable containing predictions that you want to segment}
 
 \item{dataset}{the dataset your prediction is contained within}
+
+\item{window.width}{The time gap between points that dentes a new segment, in seconds}
+
+\item{segment.length}{The minimum length of a segment in seconds}
+
+\item{epoch.length}{The length of the epoch, in seconds}
 }
 \value{
 A variable of post processed travel mode, in the same format as as

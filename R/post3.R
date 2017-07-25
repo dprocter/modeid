@@ -8,6 +8,12 @@
 #' The variable containing predictions that you want to segment
 #' @param dataset
 #' the dataset your prediction is contained within
+#' @param window.width
+#' The time gap between points that dentes a new segment, in seconds
+#' @param segment.length
+#' The minimum length of a segment in seconds
+#' @param epoch.length
+#' The length of the epoch, in seconds
 #' @return
 #' A variable of post processed travel mode, in the same format as as
 #' \code{pred.variable}
@@ -17,7 +23,7 @@
 # the third stage of post processing, identify contiguous segments and set them to the same journey mode
 # segments are separated by gaps of two minutes between valid points or changed in predicted travel mode
 # which are constant for two minutes
-post3<-function(pred.variable,dataset){
+post3<-function(pred.variable,dataset, window.width, segment.length, epoch.length){
   this.data<-dataset
   this.data$pred<-pred.variable
 
@@ -26,7 +32,7 @@ post3<-function(pred.variable,dataset){
 
   #identifies segment end points based on time
   this.data$seg.end<-numeric(length(this.data[,1]))
-  this.data$seg.end[this.data$time.since.last>=300]<-1
+  this.data$seg.end[this.data$time.since.last>=window.width]<-1
   #identifies a second end point, based on whether there is a change in predicted mode
   this.data$seg.end2<-numeric(length(this.data[,1]))
 
@@ -58,7 +64,7 @@ post3<-function(pred.variable,dataset){
     for (j.num in 2:max(this.data$segment)){
       prev.j<-subset(this.data,this.data$segment==j.num-1)
       this.j<-subset(this.data,this.data$segment==j.num)
-      if (length(this.j$pupilid)<31 & this.j$time.since.last[1]<310){
+      if (length(this.j$pupilid)<=(segment.length/epoch.length) & this.j$time.since.last[1]<=segment.length){
         this.data$segment2[this.data$segment==j.num]<-prev.j$segment2[1]
       } else{
         this.data$segment2[this.data$segment==j.num]<-this.j$segment[1]
@@ -80,4 +86,3 @@ post3<-function(pred.variable,dataset){
   #return a variable, which is the most common mode in each journey
   return(this.data$seg.common)
 }
-

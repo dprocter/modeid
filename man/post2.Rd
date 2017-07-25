@@ -4,16 +4,20 @@
 \alias{post2}
 \title{Post processing: local patterns}
 \usage{
-post2(pred.variable, dataset)
+post2(pred.variable, epoch.length, window.width, prop.agreement)
 }
 \arguments{
 \item{pred.variable}{The variable you want processed, a factor}
 
-\item{dataset}{the dataset this is based on}
+\item{epoch.length}{The length of the epoch you are using, in seconds}
+
+\item{window.width}{How wide a window you want to smooth, in seconds, centered on a point}
+
+\item{prop.agreement}{What proportion of that window you want to have the same mode}
 }
 \value{
 A variable, of the same format as \code{pred.variable}, with all points made the same
-as those which have over 50% of points assigned to them within 4 minutes.
+as those which have over the specified proportion of the specified window.
 }
 \description{
 Returns a variable, which identifies over 50% of neighbours within 4 minutes
@@ -25,4 +29,11 @@ then that mode is likely what the central point should be. We therefore take a c
 each mode from two minutes before this point to two minutes after this point. If
 a single mode has over half the points within the window, then the central point it
 assigned to that mode.
+}
+\examples{
+eg.sequence<-rep(seq(1,3,1),each=6)
+eg.sequence[8:10]<-1
+eg.sequence<-factor(eg.sequence,labels=c("walk","run","cycle"))
+eg.sequence
+post2(pred.variable = eg.sequence, epoch.length = 10, window.width = 60, prop.agreement = 0.75)
 }

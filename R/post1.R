@@ -3,11 +3,7 @@
 #' @description Returns a variable, which has identified predicted points where
 #' one point is neighboured by two of a different mode. The central
 #' point is then set as the mode of it's neighbours
-#' @param pred.variable Which variable is you predicted mode,
-#' must be written in the format \code{dataset$pred.variable} if
-#' it is within the input data.frame
-#' @param dataset
-#' The data.frame you want post processing applied to
+#' @param pred.variable The variable you wish to smooth
 #' @return
 #' A variable of travel mode, single mis-classifications removed
 #' @details
@@ -15,10 +11,16 @@
 #' are the same as one another, we assume that this is a prediction
 #' error. This function makes the center point the same as it's neighbours,
 #' providing they are the same as one another
+#' #' @examples
+#' eg.sequence<-rep(seq(1,3,1),each=6)
+#' eg.sequence[8:10]<-1
+#' eg.sequence<-factor(eg.sequence,labels=c("walk","run","cycle"))
+#' eg.sequence
+#' post1(pred.variable = eg.sequence, dataset = data.frame(eg.sequence))
 
 # post processing rule 1
-post1<-function(pred.variable,dataset){
-  this.data<-dataset
+post1<-function(pred.variable){
+  this.data<-data.frame(pred.variable)
   this.data$pred<-pred.variable
   #converts the factor to a numeric, to avoid the problem of NAs in
   this.data$pred.num<-as.numeric(this.data$pred)
