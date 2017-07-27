@@ -32,9 +32,20 @@ confusion.matrix<-function(predicted,observed){
   for (i in 1:length(t.modes)){
     for (j in 1:length(t.modes)){
       conf.mat[i,j]<-length(conf.creator$predicted[conf.creator$predicted==t.modes[i] &
-                                                     conf.creator$observed==t.modes[j]])
+                                                     conf.creator$observed==t.modes[j] &
+                                                     !is.na(conf.creator$predicted) &
+                                                     !is.na(conf.creator$observed)])
     }
   }
+  error<-numeric(length(t.modes))
+  for (i in 1:length(t.modes)){
+    error[i]<-length(conf.creator$predicted[conf.creator$observed==t.modes[i] &
+                                              is.na(conf.creator$predicted)])
+  }
+  conf.mat<-rbind(conf.mat,error)
+
   return(conf.mat)
 }
+
+
 
