@@ -1,6 +1,5 @@
 ####TO DO
 #1. Generalise to different models
-#2. Deal with empty gps files
 #3. Edit timetxt to work with
 
 
@@ -66,11 +65,13 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
     no.of.days<-length(levels(factor(acc.data$yearday)))
     if (no.of.days>7){
       acc.data<-subset(acc.data,acc.data$yearday!=acc.data$yearday[1])#get rid of day 1
-      acc.data<-subset(acc.data,select=-c(yearday))
       if (no.of.days>8){
         acc.data<-acc.data[1:(10080*(60/epoch.length)),] #clip to 10800(mins in 7 days)*(epochs in a minute)
       }
     }
+  }
+  if (!is.null(acc.data$yearday)){
+    acc.data<-subset(acc.data,select = -c(yearday))
   }
 
 
