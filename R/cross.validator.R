@@ -1,3 +1,6 @@
+# TODO
+# 1. Accuracy currently broken, make it work
+
 #' @export
 #' @title Model cross-validation
 #' @description Returns a four column matrix, with as many rows as there are

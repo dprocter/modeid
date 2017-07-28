@@ -1,5 +1,7 @@
 ####TO DO
 #1. Generalise to different models
+#2. Deal with empty gps files
+#3. Edit timetxt to work with
 
 
 #' @title Merging GPS and accelerometer files
@@ -10,12 +12,20 @@
 #' A unique identifier for the participant
 #' @param cutoff.method
 #' 1,2 or 3
+#'
 #' 1=no cutoff, keep all data
+#'
 #' 2=take 7 days from the first point
+#'
 #' 3=if there are over 8 days, trim the first then take 7 days, if there are 8 days, trim the first and keep the rest,
 #' if there are 7 or less days, keep them all
 #' @param epoch.length
 #' epoch.length in seconds
+#' @param british.time
+#' whether or not we the study is in Britain, so we need to check if the data was collected within BST and adjust GPS
+#' UTC timings by 1hour
+#'
+#' 1= need to account for BST, 0= do not
 #'
 #' @details
 #' Currently only works for Actigraph accelerometer files,
@@ -29,7 +39,7 @@
 #epoch length in seconds
 #' @export
 gps.acc.merge<-function(accfile, gpsfile, participant.id,
-                        cutoff.method, epoch.length){
+                        cutoff.method, epoch.length, british.time){
 
   ###Accelerometer data
   metadata<-read.csv(accfile,nrows=8)
@@ -68,8 +78,30 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
 
   ###GPS
   gps.data<-read.csv(gpsfile)
-  gps.data$date.time<-paste(gps.data$LOCAL.DATE,gps.data$LOCAL.TIME)
+  gps.data$date.time<-paste(gps.data$UTC.DATE,gps.data$UTC.TIME)
   gps.data$date.time<-strptime(gps.data$date.time,format="%Y/%m/%d %H:%M:%S")
+
+  # checking whether the file is within BST and adjusting
+  if (british.time==1){
+    BSTstarts<-c("25/03/2012 00:00:00", "31/03/2013 00:00:00","30/03/2014 00:00:00"
+                 , "29/03/2015 00:00:00", "27/03/2016 00:00:00", "26/03/2017 00:00:00")
+    BSTends<-c("28/10/2012 00:00:00", "27/10/2013 00:00:00", "26/10/2014 00:00:00"
+               , "25/10/2015 00:00:00", "30/10/2016 00:00:00", "29/10/2017 00:00:00")
+    BSTstarts<-strptime(BSTstarts,format="%d/%m/%Y %H:%M:%S")
+    BSTends<-strptime(BSTends,format="%d/%m/%Y %H:%M:%S")
+    within.st<-0
+
+    for (time in 1:length(BSTstarts)){
+      if (gps.data$date.time[1]>=BSTstarts[time] & gps.data$date.time[1]<=BSTends[time]){
+        within.st<-1
+      }
+    }
+
+    if (within.st==1){
+      gps.data$date.time<-gps.data$date.time+3600
+    }
+
+  }
   gps.data$day<-lubridate::wday(gps.data$date.time, label = TRUE, abbr = FALSE)
   # round the gps timing to the nearest 10 seconds, so that we can match it with the accelerometry data
   lubridate::second(gps.data$date.time)<-norm.round(second(gps.data$date.time),-1)

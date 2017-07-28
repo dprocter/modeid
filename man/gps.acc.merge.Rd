@@ -4,7 +4,8 @@
 \alias{gps.acc.merge}
 \title{Merging GPS and accelerometer files}
 \usage{
-gps.acc.merge(accfile, gpsfile, participant.id, cutoff.method, epoch.length)
+gps.acc.merge(accfile, gpsfile, participant.id, cutoff.method, epoch.length,
+  british.time)
 }
 \arguments{
 \item{accfile}{The accelerometer file to merge, a .csv}
@@ -20,6 +21,8 @@ gps.acc.merge(accfile, gpsfile, participant.id, cutoff.method, epoch.length)
 if there are 7 or less days, keep them all}
 
 \item{epoch.length}{epoch.length in seconds}
+
+\item{british.time}{whether or not we need to account for British Summer time, i.e. adjust summer GPS UTC timings by an hour}
 }
 \description{
 Returns a data.frame with Accelerometer and GPS data merged by timestamp
