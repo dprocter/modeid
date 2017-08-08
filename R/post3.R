@@ -23,12 +23,13 @@
 # the third stage of post processing, identify contiguous segments and set them to the same journey mode
 # segments are separated by gaps of two minutes between valid points or changed in predicted travel mode
 # which are constant for two minutes
-post3<-function(pred.variable,dataset, window.width, segment.length, epoch.length){
+post3<-function(pred.variable, dataset, window.width, segment.length, epoch.length){
   this.data<-dataset
   this.data$pred<-pred.variable
+  #this.data$pred<-input.data$post2.5m50.1
 
   #make sure there is a time.since.last variable
-  this.data$time.since.last<-time.since.last(this.data$datetime_tc,format="%d%b%Y %H:%M:%S")
+  this.data$time.since.last<-time.since.last(this.data$date.time,format="%Y-%m-%d %H:%M:%S")
 
   #identifies segment end points based on time
   this.data$seg.end<-numeric(length(this.data[,1]))
@@ -47,8 +48,8 @@ post3<-function(pred.variable,dataset, window.width, segment.length, epoch.lengt
 
   # a loop that marks what segment you are on, dependent on the previous point and whether
   #the current point is a jounrey end
-  this.data$segment<-numeric(length(this.data$pupilid))+1
-  for (q in 2:length(this.data$pupilid)){
+  this.data$segment<-numeric(length(this.data[,1]))+1
+  for (q in 2:length(this.data[,1])){
     if (this.data$seg.end[q]==1 | this.data$seg.end2[q]==1){
       this.data$segment[q]<-this.data$segment[q-1]+1
     } else{
@@ -59,12 +60,12 @@ post3<-function(pred.variable,dataset, window.width, segment.length, epoch.lengt
 
   # a refinement of segment, which says: if the given segment is under 2 minutes long and within 2 minutes of the
   # previous journey, combine it with the previous journey
-  this.data$segment2<-numeric(length(this.data$pupilid))+1
+  this.data$segment2<-numeric(length(this.data[,1]))+1
   if(max(this.data$segment>1)){
     for (j.num in 2:max(this.data$segment)){
       prev.j<-subset(this.data,this.data$segment==j.num-1)
       this.j<-subset(this.data,this.data$segment==j.num)
-      if (length(this.j$pupilid)<=(segment.length/epoch.length) & this.j$time.since.last[1]<=segment.length){
+      if (length(this.j[,1])<=(segment.length/epoch.length) & this.j$time.since.last[1]<=segment.length){
         this.data$segment2[this.data$segment==j.num]<-prev.j$segment2[1]
       } else{
         this.data$segment2[this.data$segment==j.num]<-this.j$segment[1]
@@ -73,7 +74,7 @@ post3<-function(pred.variable,dataset, window.width, segment.length, epoch.lengt
   }
 
   #the most common mode in each journey
-  this.data$seg.common<-numeric(length(this.data$pupilid))
+  this.data$seg.common<-numeric(length(this.data[,1]))
 
   loop.list<-as.numeric(levels(factor(this.data$segment2)))
 
