@@ -23,6 +23,8 @@
 #' @param british.time
 #' whether or not we the study is in Britain, so we need to check if the data was collected within BST and adjust GPS
 #' UTC timings by 1hour
+#' @param acc.model
+#' The accelerometer model. Currecntly "Actigraph" and "Actiheart" are valid
 #'
 #' 1= need to account for BST, 0= do not
 #'
@@ -38,19 +40,23 @@
 #epoch length in seconds
 #' @export
 gps.acc.merge<-function(accfile, gpsfile, participant.id,
-                        cutoff.method, epoch.length, british.time){
+                             cutoff.method, epoch.length, british.time
+                             , acc.model){
 
   ###Accelerometer data
-  metadata<-read.csv(accfile,nrows=8)
-  start.date<-strsplit(as.character(metadata[3,]),split=" ")[[1]][3]
-  start.time<-strsplit(as.character(metadata[2,]),split=" ")[[1]][3]
-  start.datetime<-paste(start.date,start.time)
-  start.datetime<-strptime(start.datetime,format="%d/%m/%Y %H:%M:%S")
+  if (acc.model=="Actigraph"){
+    start.datetime<-actigraph.getmeta(accfile)
+    acc.data<-actigraph.getdata(accfile=accfile, start.datetime = start.datetime)
+  } else{
+    if (acc.model=="Actiheart"){
+      #start.date<-actiheart.getmeta(accfile)
+      acc.data<-actiheart.getdata(accfile=accfile, epoch.length=epoch.length)
+    } else{
+      stop("Don't recognise the accelerometer model, currently only Actigraph and Actiheart are valid models")
+    }
+  }
 
-  acc.data<-read.csv(accfile,skip=10)
-  acc.data$date.time<-seq(start.datetime, start.datetime+(length(acc.data$Axis1)-1)*epoch.length, epoch.length)
-  acc.data$ID<-participant.id
-  acc.data$date.time.sec<-unclass(as.POSIXct(acc.data$date.time))
+
   if (cutoff.method==1) {
     acc.data<-acc.data  #i.e. do nothing, just here to remond me of that
   }
@@ -92,8 +98,8 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
     BSTends<-strptime(BSTends,format="%d/%m/%Y %H:%M:%S")
     within.st<-0
 
-    for (time in 1:length(BSTstarts)){
-      if (gps.data$date.time[1]>=BSTstarts[time] & gps.data$date.time[1]<=BSTends[time]){
+    for (z in 1:length(BSTstarts)){
+      if (gps.data$date.time[1]>=BSTstarts[z] & gps.data$date.time[1]<=BSTends[z]){
         within.st<-1
       }
     }
@@ -104,9 +110,17 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
 
   }
   gps.data$day<-lubridate::wday(gps.data$date.time, label = TRUE, abbr = FALSE)
-  # round the gps timing to the nearest 10 seconds, so that we can match it with the accelerometry data
-  lubridate::second(gps.data$date.time)<-norm.round(second(gps.data$date.time),-1)
-  gps.data$date.time.sec<-unclass(as.POSIXct(gps.data$date.time))
+
+  # rounding gps data to the nearest epoch
+  if (epoch.length==10){
+    # round the gps timing to the nearest 10 seconds, so that we can match it with the accelerometry data
+    lubridate::second(gps.data$date.time)<-norm.round(lubridate::second(gps.data$date.time),-1)
+  }
+
+  if (epoch.length==15){
+    lubridate::second(gps.data$date.time)<-round(lubridate::second(gps.data$date.time)/15)*15
+  }
+
 
   # a variable that will house sum of the signal to noise ratio
   gps.data$sumsnr<-NA
@@ -136,12 +150,12 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
     gps.data$spd[i]<-as.numeric(unlist(strsplit(as.character(gps.data$SPEED[i]),split=" "))[2])
   }
 
-  gps.data<-subset(gps.data,select=c(INDEX,date.time,day,date.time.sec,lat,long,spd,PDOP,HDOP,VDOP,sumsnr,LOCAL.DATE,LOCAL.TIME))
-  names(gps.data)<-c("index","date.time","day","date.time.sec","latitude","longitude","speed","pdop","hdop","vdop","sumsnr","date.txt","time.txt")
+  gps.data<-subset(gps.data,select=c(INDEX,date.time,day,lat,long,spd,PDOP,HDOP,VDOP,sumsnr))
+  names(gps.data)<-c("index","date.time","day","latitude","longitude","speed","pdop","hdop","vdop","sumsnr")
 
   #Stick the two together, kepping all accelerometer data, the missing GPS variables will be NA
-  merged.data<-merge(acc.data,gps.data,by="date.time.sec",all.x = TRUE)
-  merged.data<-subset(merged.data,select=-c(date.time.y))
+  merged.data<-merge(acc.data,gps.data,by="date.time",all.x = TRUE)
+  #merged.data<-subset(merged.data,select=-c(date.time.y))
   names(merged.data)[5]<-"date.time"
   merged.data$prev.time<-merged.data$date.time
   merged.data$prev.time[1]<-NA
@@ -150,8 +164,6 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
   merged.data$remove.dups[merged.data$date.time==merged.data$prev.time]<-1
   merged.data<-subset(merged.data,remove.dups!=1)
   merged.data<-subset(merged.data,select=-c(remove.dups,prev.time))
-  #merged.data<-subset(merged.data,select=-c(date.time.sec))
-  #names(merged.data)[5]<-"date.time"
 
   return(merged.data)
 }

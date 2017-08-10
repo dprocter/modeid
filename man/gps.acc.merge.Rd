@@ -5,7 +5,7 @@
 \title{Merging GPS and accelerometer files}
 \usage{
 gps.acc.merge(accfile, gpsfile, participant.id, cutoff.method, epoch.length,
-  british.time)
+  british.time, acc.model)
 }
 \arguments{
 \item{accfile}{The accelerometer file to merge, a .csv}
@@ -15,14 +15,20 @@ gps.acc.merge(accfile, gpsfile, participant.id, cutoff.method, epoch.length,
 \item{participant.id}{A unique identifier for the participant}
 
 \item{cutoff.method}{1,2 or 3
+
 1=no cutoff, keep all data
+
 2=take 7 days from the first point
+
 3=if there are over 8 days, trim the first then take 7 days, if there are 8 days, trim the first and keep the rest,
 if there are 7 or less days, keep them all}
 
 \item{epoch.length}{epoch.length in seconds}
 
-\item{british.time}{whether or not we need to account for British Summer time, i.e. adjust summer GPS UTC timings by an hour}
+\item{british.time}{whether or not we the study is in Britain, so we need to check if the data was collected within BST and adjust GPS
+UTC timings by 1hour
+
+1= need to account for BST, 0= do not}
 }
 \description{
 Returns a data.frame with Accelerometer and GPS data merged by timestamp

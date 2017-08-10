@@ -26,7 +26,6 @@
 post3<-function(pred.variable, dataset, window.width, segment.length, epoch.length){
   this.data<-dataset
   this.data$pred<-pred.variable
-  #this.data$pred<-input.data$post2.5m50.1
 
   #make sure there is a time.since.last variable
   this.data$time.since.last<-time.since.last(this.data$date.time,format="%Y-%m-%d %H:%M:%S")
