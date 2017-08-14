@@ -7,8 +7,6 @@ actigraph.getdata<-function(accfile, epoch.length){
 
   acc.data<-read.csv(accfile,skip=10)
   acc.data$date.time<-seq(start.datetime, start.datetime+(length(acc.data$Axis1)-1)*epoch.length, epoch.length)
-  acc.data$ID<-participant.id
-  acc.data$date.time.sec<-unclass(as.POSIXct(acc.data$date.time))
 
   return(acc.data)
 }

@@ -29,6 +29,8 @@ if there are 7 or less days, keep them all}
 UTC timings by 1hour
 
 1= need to account for BST, 0= do not}
+
+\item{acc.model}{The accelerometer model. Currecntly "Actigraph" and "Actiheart" are valid}
 }
 \description{
 Returns a data.frame with Accelerometer and GPS data merged by timestamp
