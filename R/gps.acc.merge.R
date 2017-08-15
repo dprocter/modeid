@@ -86,6 +86,7 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
 
   ###GPS
   gps.data<-read.csv(gpsfile)
+  if (length(gps.data[,1])>0){
   gps.data$date.time<-paste(gps.data$UTC.DATE,gps.data$UTC.TIME)
   gps.data$date.time<-strptime(gps.data$date.time,format="%Y/%m/%d %H:%M:%S")
 
@@ -145,15 +146,18 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
   gps.data$long<-gps.data$LONGITUDE
   gps.data$long[gps.data$E.W==" W"]<-gps.data$long[gps.data$E.W==" W"]*-1
 
-  # getting rid of the units from speed
+  # getting rid of the units from speed and height
   gps.data$spd<-NA
+  gps.data$hi<-NA
   for (i in 1:length(gps.data$INDEX)){
     gps.data$spd[i]<-as.numeric(unlist(strsplit(as.character(gps.data$SPEED[i]),split=" "))[2])
+    gps.data$hi[i]<-as.numeric(unlist(strsplit(as.character(gps.data$HEIGHT[i]),split=" "))[2])
   }
   gps.data$date.time.sec<-unclass(as.POSIXct(gps.data$date.time))
 
-  gps.data<-subset(gps.data,select=c(INDEX,date.time,date.time.sec,day,lat,long,spd,PDOP,HDOP,VDOP,sumsnr))
-  names(gps.data)<-c("index","date.time","date.time.sec","day","latitude","longitude","speed","pdop","hdop","vdop","sumsnr")
+
+  gps.data<-subset(gps.data,select=c(INDEX,date.time,date.time.sec,day,lat,long,spd,hi,PDOP,HDOP,VDOP,sumsnr))
+  names(gps.data)<-c("index","date.time","date.time.sec","day","latitude","longitude","speed","height","pdop","hdop","vdop","sumsnr")
 
   #Stick the two together, kepping all accelerometer data, the missing GPS variables will be NA
   merged.data<-merge(acc.data,gps.data,by="date.time.sec",all.x = TRUE)
@@ -170,4 +174,7 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
   merged.data<-subset(merged.data,select=-c(remove.dups,prev.time))
 
   return(merged.data)
+  } else{
+    print(paste(participant.id, "has no GPS data, ignoring", sep=" "))
+  }
 }
