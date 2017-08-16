@@ -171,7 +171,7 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
   merged.data$remove.dups<-numeric(length(merged.data[,1]))
   merged.data$remove.dups[merged.data$date.time==merged.data$prev.time]<-1
   merged.data<-subset(merged.data,remove.dups!=1)
-  merged.data<-subset(merged.data,select=-c(remove.dups,prev.time))
+  merged.data<-subset(merged.data,select=-c(remove.dups,prev.time,date.time.sec))
 
   return(merged.data)
   } else{
