@@ -89,6 +89,7 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
   if (length(gps.data[,1])>0){
   gps.data$date.time<-paste(gps.data$UTC.DATE,gps.data$UTC.TIME)
   gps.data$date.time<-strptime(gps.data$date.time,format="%Y/%m/%d %H:%M:%S")
+  gps.data<-subset(gps.data,UTC.DATE!=" ")
 
   # checking whether the file is within BST and adjusting
   if (british.time==1){
