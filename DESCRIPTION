@@ -5,7 +5,7 @@ Version: 0.1.0
 Author: Duncan Procter <duncan.procter@bristol.ac.uk>
 Maintainer: Duncan Procter <duncan.procter@bristol.ac.uk>
 Description: A series of functions that allow full processing of accelerometer and GPS data. Starting with raw, unmerged data. Functions to merge, remove non-wear time, clean GPS data, and predict the travel mode associated with each point are included.  
-License: MIT + file LICENSE
+License: GPL 3
 Encoding: UTF-8
 LazyData: true
 Imports: lubridate, zoo, randomForest
