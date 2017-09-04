@@ -6,7 +6,7 @@
 #' @param speed.cutoff
 #' The cut-off above which speed is deemed unreliable, in the same units as your speed variable
 #' @param hdop.cutoff
-#' THe cut-off above which your horizontal dilution of precision is deemed unreliable
+#' The cut-off above which your horizontal dilution of precision is deemed unreliable
 #' @param neighbour.number
 #' an integer: if you are removing isolated points, how few neighbours counts as isolated
 #' @param neighbour.window
@@ -32,15 +32,17 @@ data.loss.gps<-function(speed.cutoff, hdop.cutoff, neighbour.number, neighbour.w
 
   all.data<-length(this.data[,1]) # total size of merged data set
   gps.data<-length(this.data[,1][!is.na(this.data$speed)]) # total size of dataset where gps is worn
-  gps.no.neighbours<-length(this.data$pupilid[this.data$rollcount>neighbour.number & !is.na(this.data$speed)]) # total size of dataset with gps minus those with no neighbours
-  removed.highspeed<-length(this.data$pupilid[this.data$rollcount>neighbour.number & # total size of dataset where gps point has less than 3 neighbours in 5 mins
+  gps.no.neighbours<-length(this.data[,1][this.data$rollcount>neighbour.number & !is.na(this.data$speed)]) # total size of dataset with gps minus those with no neighbours
+  removed.highspeed<-length(this.data[,1][this.data$rollcount>neighbour.number & # total size of dataset where gps point has less than 3 neighbours in 5 mins
                                                 this.data$speed<speed.cutoff & !is.na(this.data$easting)])              # and is going less than 160kph
-  removed.hdop<-length(this.data$pupilid[this.data$rollcount>neighbour.number & this.data$speed<speed.cutoff #total size of dataset where gps point not isoalted, speed under
+  removed.hdop<-length(this.data[,1][this.data$rollcount>neighbour.number & this.data$speed<speed.cutoff #total size of dataset where gps point not isoalted, speed under
                                          & this.data$hdop<=hdop.cutoff & !is.na(this.data$easting)])                             # 160kph and hdop 5 or under
 
   labels<-c("total.dataset.size","invalid.gps.data","no.neigbours","excess.speed","poor.signal")
-  data.amounts<-c(all.data,gps.data,gps.data-gps.no.neighbours
-                  ,gps.no.neighbours-removed.highspeed,removed.highspeed-removed.hdop)
+  data.amounts<-c(all.data,gps.data,gps.no.neighbours
+                  ,gps.no.neighbours-removed.highspeed,gps.no.neighbours-removed.highspeed-removed.hdop)
+  data.removed<-c(0,all.data-gps.data, gps.data-gps.no.neighbours
+                  ,removed.highspeed, removed.hdop)
 
-  return(data.frame(labels,data.amounts))
+  return(data.frame(labels,data.amounts,data.removed))
 }
