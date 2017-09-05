@@ -10,7 +10,7 @@ data.loss.gps(speed.cutoff, hdop.cutoff, neighbour.number, neighbour.window,
 \arguments{
 \item{speed.cutoff}{The cut-off above which speed is deemed unreliable, in the same units as your speed variable}
 
-\item{hdop.cutoff}{THe cut-off above which your horizontal dilution of precision is deemed unreliable}
+\item{hdop.cutoff}{The cut-off above which your horizontal dilution of precision is deemed unreliable}
 
 \item{neighbour.number}{an integer: if you are removing isolated points, how few neighbours counts as isolated}
 
