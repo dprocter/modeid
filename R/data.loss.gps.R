@@ -28,21 +28,22 @@ data.loss.gps<-function(speed.cutoff, hdop.cutoff, neighbour.number, neighbour.w
   #marks whether there is GPS data
   this.data$gps.counter[!is.na(this.data$speed)]<-1
   #counts the number of gps points within a 5 minute window, centred on the point. NAs the rest
-  this.data$rollcount<-zoo::rollsum(this.data$gps.counter,(neighbour.window/epoch.length),align="center",na.pad=T)
+  this.data$rollcount<-zoo::rollapply(this.data$gps.counter,(neighbour.window/epoch.length),align="center",partial=TRUE,fill=NA,FUN=sum)
 
   all.data<-length(this.data[,1]) # total size of merged data set
   gps.data<-length(this.data[,1][!is.na(this.data$speed)]) # total size of dataset where gps is worn
   gps.no.neighbours<-length(this.data[,1][this.data$rollcount>neighbour.number & !is.na(this.data$speed)]) # total size of dataset with gps minus those with no neighbours
-  removed.highspeed<-length(this.data[,1][this.data$rollcount>neighbour.number & # total size of dataset where gps point has less than 3 neighbours in 5 mins
-                                                this.data$speed<speed.cutoff & !is.na(this.data$easting)])              # and is going less than 160kph
-  removed.hdop<-length(this.data[,1][this.data$rollcount>neighbour.number & this.data$speed<speed.cutoff #total size of dataset where gps point not isoalted, speed under
-                                         & this.data$hdop<=hdop.cutoff & !is.na(this.data$easting)])                             # 160kph and hdop 5 or under
+  highspeed<-length(this.data[,1][this.data$rollcount>neighbour.number & this.data$speed<speed.cutoff
+                                  & !is.na(this.data$speed)])              # and is going less than 160kph
+  hdop<-length(this.data[,1][this.data$rollcount>neighbour.number & this.data$speed<speed.cutoff
+                             & !is.na(this.data$speed) & this.data$hdop<hdop.cutoff])                            # 160kph and hdop 5 or under
 
   labels<-c("total.dataset.size","invalid.gps.data","no.neigbours","excess.speed","poor.signal")
   data.amounts<-c(all.data,gps.data,gps.no.neighbours
-                  ,gps.no.neighbours-removed.highspeed,gps.no.neighbours-removed.highspeed-removed.hdop)
+                  ,highspeed,hdop)
   data.removed<-c(0,all.data-gps.data, gps.data-gps.no.neighbours
-                  ,removed.highspeed, removed.hdop)
+                  ,gps.no.neighbours-highspeed,highspeed-hdop)
 
   return(data.frame(labels,data.amounts,data.removed))
 }
+
