@@ -2,6 +2,22 @@
 #' @title Distance moved
 #' @description a function that measures distance moved between points separated by a time window
 #'
+#' @param dataset
+#' The dataset you want to apply this to, we assume it has been created by processing file susing this package
+#'
+#' @param last
+#' whether you want the time window before (last=TRUE) or the following time window (last=FALSE)
+#'
+#' @param time.window
+#' The window across which to measure distance in seconds
+#'
+#' @param epoch.length
+#' Th eepoch.length you are working with, in seconds
+#'
+#' @details
+#' Given a dataset as input, this will output a variable of the same length as the datasets' variables.
+#' This will contain the distance of each point to the point the specified distance away.
+#'
 
 
 distance.moved<-function(dataset, last, time.window, epoch.length){
