@@ -49,8 +49,8 @@ model.acc<-function(conf.mat){
 
   for (i in 1:no.modes){
     true.positives[i]<-conf.mat[i,i]
-    true.negatives[i]<-sum(conf.mat[i,-i])
-    false.positives[i]<-sum(conf.mat[-i,-i])
+    true.negatives[i]<-sum(conf.mat[-i,-i])
+    false.positives[i]<-sum(conf.mat[i,-i])
     false.negatives[i]<-sum(conf.mat[-i,i])
   }
 

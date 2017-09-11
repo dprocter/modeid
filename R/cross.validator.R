@@ -56,6 +56,7 @@ cross.validator<-function(training.dataset,formula,cv.marker){
     test$pred.mode<-predict(fit[[i]],test)
     datasets[[i]]<-test
     conf.mats[[i]]<-confusion.matrix(datasets[[i]]$pred.mode,datasets[[i]]$true.mode)
+    accs[[i]]<-model.acc(conf.mats[[i]])
   }
   return(cbind(fit,datasets,conf.mats,accs))
 }
