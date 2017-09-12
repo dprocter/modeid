@@ -1,4 +1,3 @@
-#' @export
 time.since.last<-function(datetime.variable,format){
   time.base<-strptime(datetime.variable,format=format)
   time.base<-as.POSIXct(time.base)
