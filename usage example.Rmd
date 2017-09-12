@@ -2,7 +2,7 @@
 title: "modeid usage example"
 author: "Duncan Procter"
 date: "8 September 2017"
-output: html_document
+output: pdf_document
 ---
 
 
