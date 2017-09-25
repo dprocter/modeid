@@ -23,7 +23,7 @@ gps.acc.merge(accfile, gpsfile, participant.id, cutoff.method, epoch.length,
 3=if there are over 8 days, trim the first then take 7 days, if there are 8 days, trim the first and keep the rest,
 if there are 7 or less days, keep them all}
 
-\item{epoch.length}{epoch.length in seconds}
+\item{epoch.length}{epoch.length in seconds, currently, 5, 10 or 15 seconds only tested}
 
 \item{british.time}{whether or not we the study is in Britain, so we need to check if the data was collected within BST and adjust GPS
 UTC timings by 1hour

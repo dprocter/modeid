@@ -19,7 +19,7 @@
 #' 3=if there are over 8 days, trim the first then take 7 days, if there are 8 days, trim the first and keep the rest,
 #' if there are 7 or less days, keep them all
 #' @param epoch.length
-#' epoch.length in seconds
+#' epoch.length in seconds, currently, 5, 10 or 15 seconds only tested
 #' @param british.time
 #' whether or not we the study is in Britain, so we need to check if the data was collected within BST and adjust GPS
 #' UTC timings by 1hour
@@ -111,9 +111,15 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
       gps.data$date.time<-gps.data$date.time+3600
     }
 
+  } else{
+    gps.data$date.time<-paste(gps.data$LOCAL.DATE,gps.data$LOCAL.TIME)
+    gps.data$date.time<-strptime(gps.data$date.time,format="%Y/%m/%d %H:%M:%S")
   }
   gps.data$day<-lubridate::wday(gps.data$date.time, label = TRUE, abbr = FALSE)
 
+  if (epoch.length==5){
+    lubridate::second(gps.data$date.time)<-round(lubridate::second(gps.data$date.time)/5)*5
+  }
   # rounding gps data to the nearest epoch
   if (epoch.length==10){
     # round the gps timing to the nearest 10 seconds, so that we can match it with the accelerometry data

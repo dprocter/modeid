@@ -6,6 +6,19 @@
 \usage{
 distance.moved(dataset, last, time.window, epoch.length)
 }
+\arguments{
+\item{dataset}{The dataset you want to apply this to, we assume it has been created by processing file susing this package}
+
+\item{last}{whether you want the time window before (last=TRUE) or the following time window (last=FALSE)}
+
+\item{time.window}{The window across which to measure distance in seconds}
+
+\item{epoch.length}{Th eepoch.length you are working with, in seconds}
+}
 \description{
 a function that measures distance moved between points separated by a time window
+}
+\details{
+Given a dataset as input, this will output a variable of the same length as the datasets' variables.
+This will contain the distance of each point to the point the specified distance away.
 }
