@@ -24,7 +24,12 @@
 
 ### confusion matrix
 confusion.matrix<-function(predicted,observed){
-  t.modes<-levels(observed)
+  if (length(levels(predicted))>length(levels(observed))){
+    t.modes<-levels(predicted)
+  } else{
+    t.modes<-levels(observed)
+  }
+
   conf.creator<-data.frame(predicted,observed)
   conf.mat<-matrix(nrow=length(t.modes),ncol=length(t.modes))
   rownames(conf.mat)<-t.modes
