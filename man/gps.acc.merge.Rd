@@ -5,7 +5,7 @@
 \title{Merging GPS and accelerometer files}
 \usage{
 gps.acc.merge(accfile, gpsfile, participant.id, cutoff.method, epoch.length,
-  british.time, acc.model)
+  british.time, acc.model, raw = FALSE, samples.per.second = 30)
 }
 \arguments{
 \item{accfile}{The accelerometer file to merge, a .csv}

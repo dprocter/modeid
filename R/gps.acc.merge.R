@@ -41,11 +41,17 @@
 #' @export
 gps.acc.merge<-function(accfile, gpsfile, participant.id,
                              cutoff.method, epoch.length, british.time
-                             , acc.model){
+                             , acc.model,raw=FALSE,samples.per.second=30){
 
   ###Accelerometer data
   if (acc.model=="Actigraph"){
-    acc.data<-actigraph.getdata(accfile=accfile,epoch.length=epoch.length)
+    if (raw==FALSE){
+      acc.data<-actigraph.getdata(accfile=accfile,epoch.length=epoch.length)
+    } else{
+      acc.data<-actigraph.getdata.raw(accfile=accfile,epoch.length=epoch.length,samples.per.second=samples.per.second
+                                      ,participant.id = participant.id)
+    }
+
   } else{
     if (acc.model=="Actiheart"){
       #start.date<-actiheart.getmeta(accfile)
@@ -183,6 +189,13 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
   merged.data$remove.dups[merged.data$date.time==merged.data$prev.time]<-1
   merged.data<-subset(merged.data,remove.dups!=1)
   merged.data<-subset(merged.data,select=-c(remove.dups,prev.time,date.time.sec))
+
+  merged.data$acceleration<-NA
+  for (j in 2:length(merged.data[,1])){
+    if (!is.na(merged.data$speed[j]) & !is.na(merged.data$speed[j-1])){
+      merged.data$acceleration[j]<-(merged.data$speed[j]-merged.data$speed[j-1])/epoch.length
+    }
+  }
 
   return(merged.data)
   } else{
