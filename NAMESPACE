@@ -3,6 +3,7 @@
 export(acc.nonwear)
 export(confusion.matrix)
 export(cross.validator)
+export(cv.multi)
 export(data.loss.gps)
 export(distance.moved)
 export(gps.acc.merge)

@@ -31,6 +31,8 @@ UTC timings by 1hour
 1= need to account for BST, 0= do not}
 
 \item{acc.model}{The accelerometer model. Currecntly "Actigraph" and "Actiheart" are valid}
+
+\item{raw}{Boolean, if TRUE you are using raw data, not counts, must be exported as .csv, not the .gt3x, or .agd files}
 }
 \description{
 Returns a data.frame with Accelerometer and GPS data merged by timestamp
