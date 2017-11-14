@@ -27,6 +27,10 @@
 #' 1= need to account for BST, 0= do not
 #' @param acc.model
 #' The accelerometer model. Currecntly "Actigraph" and "Actiheart" are valid
+#' @param raw
+#' Boolean, if TRUE you are using raw data, not counts, must be exported as .csv, not the .gt3x, or .agd files
+#' @samples.per.second
+#' The sampling rate of raw data if used, default is 30Hz, adjust if required
 #'
 #' @details
 #' Currently only works for Actigraph accelerometer files,
