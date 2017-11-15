@@ -56,17 +56,27 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
   ax1.fft<-wapply(this.file$Accelerometer.X, epoch.width, FUN=function (x){strength.fft(x) } ,by = epoch.width)
   ax1.fft<-t(ax1.fft)
   ax1.fft<-as.data.frame(ax1.fft)
-  raw.fft$ax1.fft.mean<-apply(ax1.fft[,1:epoch.width],1,mean)
+  names(ax1.fft)<-seq(1,epoch.width,1)
+  raw.fft$ax1.fft.mean<-apply(ax1.fft,1,mean)
+  raw.fft$ax1.fft.max.name<-apply(ax1.fft,1,FUN=function(x) colnames(ax1.fft[which.max(x)]))
 
   ax2.fft<-wapply(this.file$Accelerometer.Y, epoch.width, FUN=function (x){strength.fft(x) } ,by = epoch.width)
   ax2.fft<-t(ax2.fft)
   ax2.fft<-as.data.frame(ax2.fft)
-  raw.fft$ax2.fft.mean<-apply(ax2.fft[,1:epoch.width],1,mean)
+  names(ax2.fft)<-seq(1,epoch.width,1)
+  raw.fft$ax2.fft.mean<-apply(ax2.fft,1,mean)
+  raw.fft$ax2.fft.max.name<-apply(ax2.fft,1,FUN=function(x) colnames(ax2.fft[which.max(x)]))
 
   ax3.fft<-wapply(this.file$Accelerometer.Z, epoch.width, FUN=function (x){strength.fft(x)} ,by = epoch.width)
   ax3.fft<-t(ax3.fft)
   ax3.fft<-as.data.frame(ax3.fft)
-  raw.fft$ax3.fft.mean<-apply(ax3.fft[,1:epoch.width],1,mean)
+  names(ax2.fft)<-seq(1,epoch.width,1)
+  raw.fft$ax3.fft.mean<-apply(ax3.fft,1,mean)
+  raw.fft$ax3.fft.max.name<-apply(ax3.fft,1,FUN=function(x) colnames(ax3.fft[which.max(x)]))
+
+  raw.fft$cor.xy<-wapply.xy(x=this.file$Accelerometer.X,y=this.file$Accelerometer.Y,width=epoch.width,by=epoch.width,FUN=cor)
+  raw.fft$cor.xz<-wapply.xy(x=this.file$Accelerometer.X,y=this.file$Accelerometer.Z,width=epoch.width,by=epoch.width,FUN=cor)
+  raw.fft$cor.yz<-wapply.xy(x=this.file$Accelerometer.Y,y=this.file$Accelerometer.Z,width=epoch.width,by=epoch.width,FUN=cor)
 
   return(raw.fft)
 }

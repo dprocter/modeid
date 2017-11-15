@@ -8,5 +8,8 @@ Description: A series of functions that allow full processing of accelerometer a
 License: GPL 3
 Encoding: UTF-8
 LazyData: true
-Imports: lubridate, zoo, randomForest, xgboost
+Imports: lubridate
+  , zoo
+  , randomForest
+  , xgboost
 RoxygenNote: 6.0.1
