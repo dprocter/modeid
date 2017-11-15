@@ -9,7 +9,15 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
 
   this.file<-read.csv(accfile,skip=10)
 
+  # this checks we end at a whole second, and if we don't rounds to the nearest second
+  if (norm.round(length(this.file[,1])/samples.per.second,0)!=length(this.file[,1])/samples.per.second){
+    new.end<-(norm.round(length(this.file[,1])/samples.per.second,0)-1)*samples.per.second
+    this.file<-this.file[1:new.end,]
+  }
+
   this.file$second<-rep(seq(1,length(this.file[,1])/samples.per.second),each=samples.per.second)
+
+  # this truncates the data to the nearest epoch
   if(norm.round(this.file$second[length(this.file[,1])],-1) != this.file$second[length(this.file[,1])]){
     this.file<-subset(this.file,second<=norm.round(this.file$second[length(this.file[,1])],-1)-epoch.length)
   }
