@@ -33,6 +33,8 @@ UTC timings by 1hour
 \item{acc.model}{The accelerometer model. Currecntly "Actigraph" and "Actiheart" are valid}
 
 \item{raw}{Boolean, if TRUE you are using raw data, not counts, must be exported as .csv, not the .gt3x, or .agd files}
+
+\item{samples.per.second}{The sampling rate of raw data if used, default is 30Hz, adjust if required}
 }
 \description{
 Returns a data.frame with Accelerometer and GPS data merged by timestamp
