@@ -43,7 +43,8 @@
 #'
 
 ##########################
-cv.multi<-function(training.data, label ,cv.marker ,method ,threads=2, nrounds=10, eta=0.1, subsample=0.2, max.depth=10){
+cv.multi<-function(training.data, label ,cv.marker ,method ,threads=2, nrounds=10, eta=0.1, subsample=0.2, max.depth=10
+                   ,min_child_weight=1, gamma=1, seed=NULL){
 
 
   total.data<-training.data
@@ -52,14 +53,15 @@ cv.multi<-function(training.data, label ,cv.marker ,method ,threads=2, nrounds=1
   total.data<-na.omit(total.data)
   nclass<-length(levels(factor(label)))
 
-  #fit<-as.list(numeric(max(cv.marker)))
-  #pred<-as.list(numeric(max(cv.marker)))
-  #datasets<-as.list(numeric(max(cv.marker)))
+  fit<-as.list(numeric(max(cv.marker)))
   conf.mats<-as.list(numeric(max(cv.marker)))
   accs<-as.list(numeric(max(cv.marker)))
 
 
   for (i in 1:max(total.data$cv.marker)){
+    if (!is.null(seed)){
+      set.seed(seed)
+    }
     reduced.train<-subset(total.data,cv.marker!=i)
     test<-subset(total.data,cv.marker==i)
 
@@ -67,14 +69,14 @@ cv.multi<-function(training.data, label ,cv.marker ,method ,threads=2, nrounds=1
     for.pred<-subset(test,select=-c(cv.marker,true.mode))
 
     if (method=="randomForest"){
-     fit<-randomForest::randomForest(x=for.fitting,
+     fit[[i]]<-randomForest::randomForest(x=for.fitting,
                                          y=label,importance=TRUE
     )
-     pred<-predict(fit,test)
+     pred<-predict(fit[[i]],test)
     }
 
     if (method=="xgboost"){
-      fit<-xgboost::xgboost(
+      fit[[i]]<-xgboost::xgboost(
                         data=as.matrix(for.fitting)
                         , label=reduced.train$true.mode
                         , threads=threads
@@ -85,16 +87,17 @@ cv.multi<-function(training.data, label ,cv.marker ,method ,threads=2, nrounds=1
                         , eta=eta
                         , subsample=subsample
                         , max.depth=max.depth
+                        , min_child_weight=min_child_weight
+                        , gamma=gamma
                         )
-      pred<-predict(fit,newdata=as.matrix(for.pred))
+      pred<-predict(fit[[i]],newdata=as.matrix(for.pred))
       pred<-factor(pred,labels=levels(factor(label)))
+
     }
 
-    #pred[[i]]<-predict(fit[[i]],test)
-    #test$pred.mode<-predict(fit[[i]],test)
-    #datasets[[i]]<-test
+
     conf.mats[[i]]<-confusion.matrix(predicted=pred,observed=test$true.mode)
     accs[[i]]<-model.acc(confusion.matrix(predicted=pred,observed=test$true.mode))
   }
-  return(cbind(conf.mats,accs))
+  return(cbind(fit,conf.mats,accs))
 }

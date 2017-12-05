@@ -5,7 +5,8 @@
 \title{Model cross-validation}
 \usage{
 cv.multi(training.data, label, cv.marker, method, threads = 2, nrounds = 10,
-  eta = 0.1, subsample = 0.2, max.depth = 10)
+  eta = 0.1, subsample = 0.2, max.depth = 10, min_child_weight = 1,
+  gamma = 1, seed = NULL)
 }
 \arguments{
 \item{training.data}{The data.frame of training data you want to cross-validate}
