@@ -26,7 +26,7 @@ degrav.raw<-function(accfile, epoch.length, samples.per.second, participant.id){
     this.file<-subset(this.file,second<=norm.round(this.file$second[length(this.file[,1])],-1)-epoch.length)
   }
   
-  print("Raw file read in, removing gravity")
+  print(paste(participant.id,"Raw file read in, removing gravity"))
   ##############
   grav.adjuster<-function(x){
     newgrav<-0.1*x+grav*0.9
@@ -62,32 +62,65 @@ degrav.raw<-function(accfile, epoch.length, samples.per.second, participant.id){
   this.file$date.time<-start.datetime+this.file$epoch
   
   
-  print("Gravity removed, calculating summaries per epoch")
+  print(paste(participant.id,"Gravity removed, calculating summaries per epoch"))
   
   Axis1.ng<-wapply(this.file$ax1.g2, epoch.width, FUN=mean ,by = epoch.width)
   raw.fft<-data.frame(Axis1.ng)
   raw.fft$ax1.ng.mad<-wapply(this.file$ax1.g2, epoch.width, FUN=mad ,by = epoch.width)
   raw.fft$ax1.ng.c90<-wapply(this.file$ax1.g2, epoch.width, FUN=function(x){quantile(x,0.9,na.rm = TRUE)}, by=epoch.width)
   raw.fft$ax1.ng.c10<-wapply(this.file$ax1.g2, epoch.width, FUN=function(x){quantile(x,0.1,na.rm = TRUE)}, by=epoch.width)
-  raw.fft$abs.ax1<-wapply(abs(this.file$ax1.g2), epoch.width, FUN=mean ,by = epoch.width)
-  
+
   raw.fft$Axis2.ng<-wapply(this.file$ax2.g2, epoch.width, FUN=mean ,by = epoch.width)
   raw.fft$ax2.ng.mad<-wapply(this.file$ax2.g2, epoch.width, FUN=mad ,by = epoch.width)
   raw.fft$ax2.ng.c90<-wapply(this.file$ax2.g2, epoch.width, FUN=function(x){quantile(x,0.9,na.rm = TRUE)}, by=epoch.width)
   raw.fft$ax2.ng.c10<-wapply(this.file$ax2.g2, epoch.width, FUN=function(x){quantile(x,0.1,na.rm = TRUE)}, by=epoch.width)
-  raw.fft$abs.ax2<-wapply(abs(this.file$ax2.g2), epoch.width, FUN=mean ,by = epoch.width)
-  
+
+
   raw.fft$Axis3.ng<-wapply(this.file$ax3.g2, epoch.width, FUN=mean ,by = epoch.width)
   raw.fft$ax3.ng.mad<-wapply(this.file$ax3.g2, epoch.width, FUN=mad ,by = epoch.width)
   raw.fft$ax3.ng.c90<-wapply(this.file$ax3.g2, epoch.width, FUN=function(x){quantile(x,0.9,na.rm = TRUE)}, by=epoch.width)
   raw.fft$ax3.ng.c10<-wapply(this.file$ax3.g2, epoch.width, FUN=function(x){quantile(x,0.1,na.rm = TRUE)}, by=epoch.width)
-  raw.fft$abs.ax3<-wapply(abs(this.file$ax3.g2), epoch.width, FUN=mean ,by = epoch.width)
-  
+
   
   raw.fft$vmag.mean<-wapply(this.file$vmag.g2, epoch.width, FUN=mean ,by = epoch.width)
   raw.fft$vmag.mad<-wapply(this.file$vmag.g2, epoch.width, FUN=mad ,by = epoch.width)
   raw.fft$vmag.c90<-wapply(this.file$vmag.g2, epoch.width, FUN=function(x){quantile(x,0.9,na.rm = TRUE)}, by=epoch.width)
   raw.fft$vmag.c10<-wapply(this.file$vmag.g2, epoch.width, FUN=function(x){quantile(x,0.1,na.rm = TRUE)}, by=epoch.width)
+  
+  
+  print(paste(participant.id,"Summaries calculated, calculating ffts"))
+  
+  ax1.fft<-wapply(this.file$Accelerometer.X, epoch.width, FUN=function (x){strength.fft(x) } ,by = epoch.width)
+  ax1.fft<-t(ax1.fft)
+  ax1.fft<-as.data.frame(ax1.fft)
+  names(ax1.fft)<-seq(1,epoch.width,1)
+  raw.fft$ax1.fft.mean<-apply(ax1.fft,1,mean)
+  
+  ax2.fft<-wapply(this.file$Accelerometer.Y, epoch.width, FUN=function (x){strength.fft(x) } ,by = epoch.width)
+  ax2.fft<-t(ax2.fft)
+  ax2.fft<-as.data.frame(ax2.fft)
+  names(ax2.fft)<-seq(1,epoch.width,1)
+  raw.fft$ax2.fft.mean<-apply(ax2.fft,1,mean)
+  
+  ax3.fft<-wapply(this.file$Accelerometer.Z, epoch.width, FUN=function (x){strength.fft(x)} ,by = epoch.width)
+  ax3.fft<-t(ax3.fft)
+  ax3.fft<-as.data.frame(ax3.fft)
+  names(ax3.fft)<-seq(1,epoch.width,1)
+  raw.fft$ax3.fft.mean<-apply(ax3.fft,1,mean)
+  
+  vmag.fft<-wapply(this.file$vec.mag, epoch.width, FUN=function (x){strength.fft(x)} ,by = epoch.width)
+  vmag.fft<-t(vmag.fft)
+  vmag.fft<-as.data.frame(vmag.fft)
+  names(vmag.fft)<-seq(1,epoch.width,1)
+  raw.fft$vmag.fft.mean<-apply(ax3.fft,1,mean)
+  
+  
+  raw.fft$cor.xy<-wapply.xy(x=this.file$Accelerometer.X,y=this.file$Accelerometer.Y,width=epoch.width,by=epoch.width,FUN=cor)
+  raw.fft$cor.xz<-wapply.xy(x=this.file$Accelerometer.X,y=this.file$Accelerometer.Z,width=epoch.width,by=epoch.width,FUN=cor)
+  raw.fft$cor.yz<-wapply.xy(x=this.file$Accelerometer.Y,y=this.file$Accelerometer.Z,width=epoch.width,by=epoch.width,FUN=cor)
+  
+  
+  
   
   raw.fft$date.time<-seq(start.datetime,(start.datetime+length(raw.fft[,1])*epoch.length)-epoch.length,epoch.length)
   raw.fft$id<-participant.id

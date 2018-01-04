@@ -1,6 +1,6 @@
-actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, participant.id, nonwear=TRUE){
+actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, participant.id, nonwear=TRUE, remove.gravity=TRUE){
   
-  ggir.calib<-GGIR::g.calibrate(accfile,windowsizes = c(epoch.length,900,3600))
+  ggir.calib<-GGIR::g.calibrate(accfile,windowsizes = c(epoch.length,900,3600),printsummary = FALSE)
   
 
 
@@ -12,11 +12,10 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
   start.datetime<-strptime(start.datetime,format="%d/%m/%Y %H:%M:%S")
 
   this.file<-read.csv(accfile,skip=10)
-  this.file$Accelerometer.X<-this.file$Accelerometer.X/ggir.calib$scale[1]
-  this.file$Accelerometer.Y<-this.file$Accelerometer.Y/ggir.calib$scale[2]
-  this.file$Accelerometer.Z<-this.file$Accelerometer.Z/ggir.calib$scale[3]
+  # this.file$Accelerometer.X<-this.file$Accelerometer.X/ggir.calib$scale[1]
+  # this.file$Accelerometer.Y<-this.file$Accelerometer.Y/ggir.calib$scale[2]
+  # this.file$Accelerometer.Z<-this.file$Accelerometer.Z/ggir.calib$scale[3]
   
-  this.file$vec.mag<-sqrt(this.file[,1]^2+this.file[,2]^2+this.file[,3]^2)
 
   # this checks we end at a whole second, and if we don't rounds to the nearest second
   if (norm.round(length(this.file[,1])/samples.per.second,0)!=length(this.file[,1])/samples.per.second){
@@ -37,33 +36,80 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
   this.file$date.time<-start.datetime+this.file$epoch
   
   
+  
+  
+  
+  if (isTRUE(remove.gravity)){
+    print(paste(participant.id,"Raw file read in, removing gravity"))
+    ##############
+    grav.adjuster<-function(x){
+      newgrav<-0.1*x+grav*0.9
+      grav<<-newgrav
+      return(newgrav)
+    }
+    
+    ################################
+    # gravity removal
+    this.file$ax1.g<-0
+    this.file$ax2.g<-0
+    this.file$ax3.g<-0
+    
+    grav<-0
+    this.file$ax1.g<-sapply(this.file$Accelerometer.X,FUN=grav.adjuster)
+    grav<-0
+    this.file$ax2.g<-sapply(this.file$Accelerometer.Y,FUN=grav.adjuster)
+    grav<-0
+    this.file$ax3.g<-sapply(this.file$Accelerometer.Z,FUN=grav.adjuster)
+    
+    this.file$Accelerometer.X<-this.file$Accelerometer.X-this.file$ax1.g
+    this.file$Accelerometer.Y<-this.file$Accelerometer.Y-this.file$ax2.g
+    this.file$Accelerometer.Z<-this.file$Accelerometer.Z-this.file$ax3.g
+  
+    print(paste(participant.id,"Gravity removed, calculating summaries per epoch"))
+    
+  } else{
+    print(paste(participant.id,"Raw file read in, calculating summaries per epoch"))
+  }
+  
+  this.file$vec.mag<-sqrt(this.file$Accelerometer.X^2+
+                            this.file$Accelerometer.Y^2+
+                            this.file$Accelerometer.Z^2)
+  
 
-  print("Raw file read in, calculating summaries per epoch")
+ 
 
 
 
-  Axis1<-wapply(this.file[,1], epoch.width, FUN=median ,by = epoch.width)
+  Axis1<-wapply(this.file$Accelerometer.X, epoch.width, FUN=mean ,by = epoch.width)
   raw.fft<-data.frame(Axis1)
-  raw.fft$ax1.mad<-wapply(this.file[,1], epoch.width, FUN=mad ,by = epoch.width)
+  raw.fft$ax1.mad<-wapply(this.file$Accelerometer.X, epoch.width, FUN=mad ,by = epoch.width)
   raw.fft$ax1.c90<-wapply(this.file$Accelerometer.X, epoch.width, FUN=function(x){quantile(x,0.9,na.rm = TRUE)}, by=epoch.width)
   raw.fft$ax1.c10<-wapply(this.file$Accelerometer.X, epoch.width, FUN=function(x){quantile(x,0.1,na.rm = TRUE)}, by=epoch.width)
+  raw.fft$ax1.kurt<-wapply(this.file$Accelerometer.X, epoch.width, FUN=moments::kurtosis ,by = epoch.width)
+  raw.fft$ax1.skew<-wapply(this.file$Accelerometer.X, epoch.width, FUN=moments::skewness ,by = epoch.width)
 
-  raw.fft$Axis2<-wapply(this.file[,2], epoch.width, FUN=median ,by = epoch.width)
-  raw.fft$ax2.mad<-wapply(this.file[,2], epoch.width, FUN=mad ,by = epoch.width)
+  raw.fft$Axis2<-wapply(this.file$Accelerometer.Y, epoch.width, FUN=mean ,by = epoch.width)
+  raw.fft$ax2.mad<-wapply(this.file$Accelerometer.Y, epoch.width, FUN=mad ,by = epoch.width)
   raw.fft$ax2.c90<-wapply(this.file$Accelerometer.Y, epoch.width, FUN=function(x){quantile(x,0.9,na.rm = TRUE)}, by=epoch.width)
   raw.fft$ax2.c10<-wapply(this.file$Accelerometer.Y, epoch.width, FUN=function(x){quantile(x,0.1,na.rm = TRUE)}, by=epoch.width)
+  raw.fft$ax2.kurt<-wapply(this.file$Accelerometer.Y, epoch.width, FUN=moments::kurtosis ,by = epoch.width)
+  raw.fft$ax2.skew<-wapply(this.file$Accelerometer.Y, epoch.width, FUN=moments::skewness ,by = epoch.width)
 
-  raw.fft$Axis3<-wapply(this.file[,3], epoch.width, FUN=median ,by = epoch.width)
-  raw.fft$ax3.mad<-wapply(this.file[,3], epoch.width, FUN=mad ,by = epoch.width)
+  raw.fft$Axis3<-wapply(this.file$Accelerometer.Z, epoch.width, FUN=mean ,by = epoch.width)
+  raw.fft$ax3.mad<-wapply(this.file$Accelerometer.Z, epoch.width, FUN=mad ,by = epoch.width)
   raw.fft$ax3.c90<-wapply(this.file$Accelerometer.Z, epoch.width, FUN=function(x){quantile(x,0.9,na.rm = TRUE)}, by=epoch.width)
   raw.fft$ax3.c10<-wapply(this.file$Accelerometer.Z, epoch.width, FUN=function(x){quantile(x,0.1,na.rm = TRUE)}, by=epoch.width)
-
+  raw.fft$ax3.kurt<-wapply(this.file$Accelerometer.Z, epoch.width, FUN=moments::kurtosis ,by = epoch.width)
+  raw.fft$ax3.skew<-wapply(this.file$Accelerometer.Z, epoch.width, FUN=moments::skewness ,by = epoch.width)
 
   
   raw.fft$vmag.mean<-wapply(this.file$vec.mag, epoch.width, FUN=mean ,by = epoch.width)
   raw.fft$vmag.mad<-wapply(this.file$vec.mag, epoch.width, FUN=mad ,by = epoch.width)
   raw.fft$vmag.c90<-wapply(this.file$vec.mag, epoch.width, FUN=function(x){quantile(x,0.9,na.rm = TRUE)}, by=epoch.width)
   raw.fft$vmag.c10<-wapply(this.file$vec.mag, epoch.width, FUN=function(x){quantile(x,0.1,na.rm = TRUE)}, by=epoch.width)
+  raw.fft$vmag.kurt<-wapply(this.file$vec.mag, epoch.width, FUN=moments::kurtosis ,by = epoch.width)
+  raw.fft$vmag.skew<-wapply(this.file$vec.mag, epoch.width, FUN=moments::skewness ,by = epoch.width)
+  
   
   raw.fft$date.time<-seq(start.datetime,(start.datetime+length(raw.fft[,1])*epoch.length)-epoch.length,epoch.length)
   raw.fft$id<-participant.id
@@ -71,7 +117,7 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
   raw.fft$date.time.sec<-unclass(as.POSIXct(raw.fft$date.time))
   
   if (nonwear==TRUE){
-    print("Summaries calculated, calculating nonwear")
+    print(paste(participant.id,"Summaries calculated, calculating nonwear"))
     ggir.nonwear<-GGIR::g.getmeta(accfile,windowsizes = c(epoch.length,900,3600)
                                   ,scale = ggir.calib$scale,offset = ggir.calib$offset)
     
@@ -87,9 +133,9 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
       }
     }
     
-    print("Nonwear time assessed, calculating FFTs")
+    print(paste(participant.id,"Nonwear time assessed, calculating FFTs"))
   } else{
-    print("Summaries calculated, calculating FFTs")
+    print(paste(participant.id,"Summaries calculated, calculating FFTs"))
   }
 
   

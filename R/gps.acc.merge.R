@@ -101,6 +101,8 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
 
   gps.data<-read.csv(gpsfile)
   if (length(gps.data[,1])>0){
+    gps.data<-subset(gps.data,VALID!=" NO FIX")
+    if (length(gps.data[,1])>0){
   gps.data$date.time<-paste(gps.data$UTC.DATE,gps.data$UTC.TIME)
   gps.data$date.time<-strptime(gps.data$date.time,format="%Y/%m/%d %H:%M:%S")
   gps.data<-subset(gps.data,UTC.DATE!=" ")
@@ -202,6 +204,7 @@ gps.acc.merge<-function(accfile, gpsfile, participant.id,
   }
 
   return(merged.data)
+    }
   } else{
     print(paste(participant.id, "has no GPS data, ignoring", sep=" "))
   }
