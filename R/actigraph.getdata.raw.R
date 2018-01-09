@@ -12,10 +12,10 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
   start.datetime<-strptime(start.datetime,format="%d/%m/%Y %H:%M:%S")
 
   this.file<-read.csv(accfile,skip=10)
-  # this.file$Accelerometer.X<-this.file$Accelerometer.X/ggir.calib$scale[1]
-  # this.file$Accelerometer.Y<-this.file$Accelerometer.Y/ggir.calib$scale[2]
-  # this.file$Accelerometer.Z<-this.file$Accelerometer.Z/ggir.calib$scale[3]
-  
+  this.file$Accelerometer.X<-this.file$Accelerometer.X/ggir.calib$scale[1]
+  this.file$Accelerometer.Y<-this.file$Accelerometer.Y/ggir.calib$scale[2]
+  this.file$Accelerometer.Z<-this.file$Accelerometer.Z/ggir.calib$scale[3]
+
 
   # this checks we end at a whole second, and if we don't rounds to the nearest second
   if (norm.round(length(this.file[,1])/samples.per.second,0)!=length(this.file[,1])/samples.per.second){
@@ -41,7 +41,7 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
   
   ENMO<-wapply(this.file$vec.mag, epoch.width, FUN=mean ,by = epoch.width)
   ENMO<-ENMO-1
-  
+  ENMO[ENMO<0]<-0
   
   
   if (isTRUE(remove.gravity)){
