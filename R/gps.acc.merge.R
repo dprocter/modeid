@@ -1,4 +1,23 @@
-gps.acc.merge2<-function(acc.data, gpsfile, participant.id,
+#' @title Merging GPS and accelerometer files
+#' @description Returns a data.frame with Accelerometer and GPS data merged by timestamp
+#' @param acc.data The accelerometer data to merge, processed with \code{\link{process.acc}}
+#' @param gpsfile The GPS file to merge, a .csv
+#' @param participant.id
+#' A unique identifier for the participant
+#' @param epoch.length
+#' epoch.length in seconds, currently, 5, 10 or 15 seconds only tested
+#' @param british.time
+#' whether or not we the study is in Britain, so we need to check if the data was collected
+#'  within BST and adjust GPS UTC timings by 1hour
+#'
+#' 1= need to account for BST, 0= do not
+#'
+#' @details
+#' Currently only tested with Qstarz GPS device files. If you need other types contect the author
+#' , they can be included with ease
+#'
+#' @export
+gps.acc.merge<-function(acc.data, gpsfile, participant.id,
                         epoch.length, british.time){
   
   if (!file.exists(gpsfile)){

@@ -4,43 +4,26 @@
 \alias{gps.acc.merge}
 \title{Merging GPS and accelerometer files}
 \usage{
-gps.acc.merge(accfile, gpsfile, participant.id, cutoff.method, epoch.length,
-  british.time, acc.model, raw = FALSE, samples.per.second = 30)
+gps.acc.merge(acc.data, gpsfile, participant.id, epoch.length, british.time)
 }
 \arguments{
-\item{accfile}{The accelerometer file to merge, a .csv}
+\item{acc.data}{The accelerometer data to merge, processed with \code{\link{process.acc}}}
 
 \item{gpsfile}{The GPS file to merge, a .csv}
 
 \item{participant.id}{A unique identifier for the participant}
 
-\item{cutoff.method}{1,2 or 3
-
-1=no cutoff, keep all data
-
-2=take 7 days from the first point
-
-3=if there are over 8 days, trim the first then take 7 days, if there are 8 days, trim the first and keep the rest,
-if there are 7 or less days, keep them all}
-
 \item{epoch.length}{epoch.length in seconds, currently, 5, 10 or 15 seconds only tested}
 
-\item{british.time}{whether or not we the study is in Britain, so we need to check if the data was collected within BST and adjust GPS
-UTC timings by 1hour
+\item{british.time}{whether or not we the study is in Britain, so we need to check if the data was collected
+ within BST and adjust GPS UTC timings by 1hour
 
 1= need to account for BST, 0= do not}
-
-\item{acc.model}{The accelerometer model. Currecntly "Actigraph" and "Actiheart" are valid}
-
-\item{raw}{Boolean, if TRUE you are using raw data, not counts, must be exported as .csv, not the .gt3x, or .agd files}
-
-\item{samples.per.second}{The sampling rate of raw data if used, default is 30Hz, adjust if required}
 }
 \description{
 Returns a data.frame with Accelerometer and GPS data merged by timestamp
 }
 \details{
-Currently only works for Actigraph accelerometer files,
-, and Qstarz GPS device files. If you need other types contect the author
-, they can be included
+Currently only tested with Qstarz GPS device files. If you need other types contect the author
+, they can be included with ease
 }
