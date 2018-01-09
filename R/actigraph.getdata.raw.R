@@ -35,7 +35,12 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
 
   this.file$date.time<-start.datetime+this.file$epoch
   
+  this.file$vec.mag<-sqrt(this.file$Accelerometer.X^2+
+                            this.file$Accelerometer.Y^2+
+                            this.file$Accelerometer.Z^2)
   
+  ENMO<-wapply(this.file$vec.mag, epoch.width, FUN=mean ,by = epoch.width)
+  ENMO<-ENMO-1
   
   
   
@@ -109,6 +114,7 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
   raw.fft$vmag.c10<-wapply(this.file$vec.mag, epoch.width, FUN=function(x){quantile(x,0.1,na.rm = TRUE)}, by=epoch.width)
   raw.fft$vmag.kurt<-wapply(this.file$vec.mag, epoch.width, FUN=moments::kurtosis ,by = epoch.width)
   raw.fft$vmag.skew<-wapply(this.file$vec.mag, epoch.width, FUN=moments::skewness ,by = epoch.width)
+  raw.fft$ENMO<-ENMO
   
   
   raw.fft$date.time<-seq(start.datetime,(start.datetime+length(raw.fft[,1])*epoch.length)-epoch.length,epoch.length)

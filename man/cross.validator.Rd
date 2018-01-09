@@ -4,16 +4,28 @@
 \alias{cross.validator}
 \title{Model cross-validation}
 \usage{
-cross.validator(training.dataset, formula, cv.marker)
+cross.validator(training.data, label, cv.marker, method, threads = 2,
+  nrounds = 10, eta = 0.1, subsample = 0.2, max.depth = 10,
+  min_child_weight = 1, gamma = 1, seed = NULL)
 }
 \arguments{
-\item{training.dataset}{The data.frame of training data you want to cross-validate}
+\item{training.data}{The data.frame of training data you want to cross-validate}
 
-\item{formula}{The formula of the model you want to use to fit the randomForest,
-e.g. \code{true.mode~ax1.mean+spd.mean} would have the true mode being
-classified by the mean of accelerometer axis 1 and mean speed}
+\item{label}{A variable of the same length as the rows of \code{training.data}, with the true mode of travel}
 
 \item{cv.marker}{A numeric marker for cross-validation subsets}
+
+\item{method}{The method to use, currently either "randomForest" or "xgboost"}
+
+\item{threads}{number of threads to pass to xgboost to allow parralel computation, default is 2}
+
+\item{nrounds}{The number of iterations for xgboost to perform, default is 10}
+
+\item{eta}{The eta value to supply to xgboost, between 0 and 1, lowe values reduce overfitting, default 0.1}
+
+\item{subsample}{The proportion of data for xgboost toapply to each tree, smaller values reduce overfitting, default 0.2}
+
+\item{max.depth}{The maximum tree depth for xgboost, default is 10}
 }
 \value{
 A four column matrix (I realise this is not terribly elegant, it will probably be changed).
@@ -21,19 +33,19 @@ The rows contain different cross-validation subsets.
 
 The columns are as follows:
 
-1. Fitted randomForest models for each cross-validation subset
+1. Fitted models for each cross-validation subset
 
-2. Test data.frame for each cross-validation subset
+2. The \code{\link{confusion.matrix}} for each cross-validation subset
 
-3. The \code{\link{confusion.matrix}} for each cross-validation subset
-
-4. The \code{\link{model.acc}} for each cross-validation subset
+3. The \code{\link{model.acc}} for each cross-validation subset
 }
 \description{
-Returns a four column matrix, with as many rows as there are
+Returns three column matrix, with as many rows as there are
 crossvalidation subsets.
-Column 1 has a fitted randomForest for each cross-valitation subset.
-Column 2 has the test data.frame for each cross-validation subset.
-Column 3 has the \code{\link{confusion.matrix}} for each cross-validation subset
-Column 4 has the \code{\link{model.acc}} for each cross-validation subset
+
+Column 1 has the fitted models
+
+Column 2 has the \code{\link{confusion.matrix}} for each cross-validation subset
+
+Column 3 has the \code{\link{model.acc}} for each cross-validation subset
 }

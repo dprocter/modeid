@@ -17,23 +17,27 @@ Returns model accuracy from a confusion matrix derived from
 \code{\link{confusion.matrix}}
 }
 \details{
-Return accuracy scores for each mode, all expressed as percentages.
+Return accuracy scores for each mode, all expressed as percentages. 
+There are many names for different accuracy scores, and some scores are preferential in certain
+ situations, see https://en.wikipedia.org/wiki/Sensitivity_and_specificity
 
-PPV, Positive predictive value (aka Precision): the percentage of points which the model predicts as each mode
+Scores output:
+
+1. PPV, Positive predictive value (aka Precision): the percentage of points which the model predicts as each mode
 which are also observed as that mode
 
-Sensitivity (aka Recall, Detection rate, True Posistive rate): the ratio of true positives
+2. Sensitivity (aka Recall, Detection rate, True Positive rate): the ratio of true positives
 to true positives and false negatives
 
-NPV: Negative predictive value: The ratio of true negatives and false negatives
+3. NPV: Negative predictive value: The ratio of true negatives and false negatives
 
-Specificity (aka True Neagtive Rate): The ratio of true negatives to true negatives and false positives
+4. Specificity (aka True Negative Rate): The ratio of true negatives to true negatives and false positives
 
-Accuracy: The sum of true positives and negatives divided by the sum of true and false negatives and positives
+5. Accuracy: The sum of true positives and negatives divided by the sum of true and false negatives and positives
 
-F1 score: The harmonic mean of PPV and sensitivity
-
- @examples
+6. F1 score: The harmonic mean of PPV and sensitivity
+}
+\examples{
 pred<-numeric(10)+1
 pred[5:6]<-2
 pred<-factor(pred,labels=c("Mode1","Mode2"))

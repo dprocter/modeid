@@ -4,10 +4,10 @@
 #' Returns a confusion matrix, based on a predicted and observed variable
 #' @param predicted
 #' A factor variable of predicted mode
-#' @param
+#' @param observed
 #' A factor variable of observed mode
 #' @return
-#' A matrix of hwo predicted and observed modes correspond
+#' A matrix of how predicted and observed modes correspond
 #' @details
 #' The output rows are the predicted modes, the output columns are the observed
 #'

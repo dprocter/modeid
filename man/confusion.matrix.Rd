@@ -9,10 +9,10 @@ confusion.matrix(predicted, observed)
 \arguments{
 \item{predicted}{A factor variable of predicted mode}
 
-\item{A}{factor variable of observed mode}
+\item{observed}{A factor variable of observed mode}
 }
 \value{
-A matrix of hwo predicted and observed modes correspond
+A matrix of how predicted and observed modes correspond
 }
 \description{
 Returns a confusion matrix, based on a predicted and observed variable
