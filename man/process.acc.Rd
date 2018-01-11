@@ -25,7 +25,7 @@ if there are 7 or less days, keep them all}
 
 1= need to account for BST, 0= do not}
 
-\item{acc.model}{The accelerometer model. Currecntly "Actigraph" and "Actiheart" are valid}
+\item{acc.model}{The accelerometer model. Currently "Actigraph" and "Actiheart" are valid}
 
 \item{raw}{Boolean, if TRUE you are using raw data, not counts, must be exported as .csv, not the .gt3x, or .agd files}
 

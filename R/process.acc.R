@@ -18,7 +18,7 @@
 #'
 #' 1= need to account for BST, 0= do not
 #' @param acc.model
-#' The accelerometer model. Currecntly "Actigraph" and "Actiheart" are valid
+#' The accelerometer model. Currently "Actigraph" and "Actiheart" are valid
 #' @param raw
 #' Boolean, if TRUE you are using raw data, not counts, must be exported as .csv, not the .gt3x, or .agd files
 #' @param samples.per.second

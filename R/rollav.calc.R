@@ -1,3 +1,18 @@
+#' @title Calculate rolling averages from a dataset
+#' @description Takes a merged gps/acc dataset and returns the same dataset with added rolling average variables
+#' @param dataset A merged gps/acc dataset
+#' @param acc whether there is accelerometer data, default = TRUE
+#' @param gps whether there is GPS data, default=TRUE
+#' @details Here we assume you have processed accelerometer data using \code{\link{process.acc}}, 
+#' merged it to GPS data using \code{\link{gps.acc.merge}}, and added variables called \emph{near.train}, 
+#' \emph{dist.next.min} and \emph{dist.last.min}, possibly using \code{\link{near.train}} and 
+#' \code{\link{distance.moved}}
+#' 
+#' This function will then take that dataset, and output the same dataset with
+#'  the rolling averages neccessary to fit the model in Procter et al. 2018 added to it
+#'  
+#' @export
+
 rollav.calc<-function(dataset,acc=TRUE,gps=TRUE){
   input.data<-dataset
   if (isTRUE(acc)){
