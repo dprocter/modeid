@@ -2,14 +2,17 @@
 title: "modeid usage example"
 author: "Duncan Procter"
 date: "8 September 2017"
-output: pdf_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 
 ```{r setup, include=FALSE}
+.libPaths("C:/Duncan/R libraries")
 
-accfile<-"C:/Duncan/ENABLE/BST/Example data/Acc/bob10sec.csv"
-gpsfile<-"C:/Duncan/ENABLE/BST/Example data/GPS/bob.csv"
+accfile<-"C:/Duncan/ENABLE/eg/i0437m1f1RAW.csv"
+gpsfile<-"C:/Duncan/ENABLE/eg/i0437m1f1.csv"
 
 ```
 
@@ -19,7 +22,7 @@ To use this example you will need quite a few packages installed. Going though i
 ``` {r libraries, eval=FALSE}
 install.packages("devtools","zoo","xgboost","moments","sp","rgdal","maptools","spatstat")
 library(devtools)
-install.githhub("dprocter/modeid",quiet=TRUE)
+install_github("dprocter/modeid",quiet=TRUE)
 ```
 
 
@@ -31,8 +34,8 @@ We have privided an anonymised version of our training dataset, so you can see h
 
 ```{r training data}
 library(modeid)
-training.data<-Proc2017tdata
-summary(training.data)
+training.data<-train.data
+names(training.data)
 
 ```
 
@@ -51,22 +54,20 @@ We use set.seed to give the randomness a start point, but we cannot account for 
 
 ```{r crossvalidation}
 
-train.for.cv<-subset(training.data,select=-c(Axis1,Axis2,Axis3,speed,pdop,hdop,vdop,sumsnr,near.train
-                                             ,dist.next.min,dist.last.min))
+train.for.cv<-training.data
 train.for.cv<-na.omit(train.for.cv)
 
-set.seed(315)
-cv.model<-cross.validator(training.dataset = train.for.cv
-                ,formula = true.mode~ax1.mean+ax1.sd+ax1.cent.90+ax1.cent.10
-                         +spd.mean+spd.sd+spd.cent.90+spd.cent.10
-                         +sumsnr.mean+near.train.4min+dist.4min.nextmin+dist.4min.lastmin
-                ,cv.marker = train.for.cv$cv.marker)
+cv.model<-cross.validator(training.data = pred.data(train.for.cv)
+                          , label = train.for.cv$true.mode
+                          , cv.marker = train.for.cv$cv.marker
+                          , seed=315
+                          , method = "xgboost"
+                          , threads=8
+                          , nrounds=200
+                          , gamma=10)
 
-#This is ugly, but gives an overall confusion matrix 
-cv.overall<-cv.model[1,3][[1]]+cv.model[2,3][[1]]+cv.model[3,3][[1]]+cv.model[4,3][[1]]+cv.model[5,3][[1]]
-cv.overall
-
-model.acc(cv.overall)
+overall.acc(cvd.model = cv.model
+        , full.dataset = training.data)
 
 ```
 
@@ -108,9 +109,8 @@ merged.data<-gps.acc.merge(acc.data = acc.data
                           ,gpsfile = gpsfile
                           ,participant.id = "id1"
                           ,epoch.length = 10
-                          ,british.time = 1)
+                          ,british.time = TRUE)
 
-summary(merged.data)
 ```
 
 
@@ -150,121 +150,11 @@ merged.data<-gps.cleaner(speed.cutoff = 200
 
 ### Calculating distance to train lines
 
-This doesn't cover getting the neccessary data on train lines. As a start point, if you're in a UK institution there is lots of data freely available on Digimap. 
-
-We use the sp and rgdal packages to import an ArcGIS shapefile into R of train lines, then convert the *SpatialLinesDataFrame* into a *psp* (a line segment pattern) so we can use the *spatstat* function *nncross* to measure distance from each point to the nearest train line. For the participants data we make *SpatialPointsDataFrame*, then reproject it to OSGB1936, used by the train data, and then convert it into a *ppp* to allow us to use the spatstat function. This is a fairly convoluted method, but it works
-
-
-``` {r train lines}
-library(sp)
-library(maptools)
-library(rgdal)
-library(spatstat)
-
-train.lines<-readOGR("C:/Duncan/Train lines","all_train_lines")
-
-train.coords<-coordinates(train.lines)
-max.x<-max(unlist(lapply(train.coords,FUN=function(x){x[[1]][,1]})))
-max.y<-max(unlist(lapply(train.coords,FUN=function(x){x[[1]][,2]})))
-min.x<-min(unlist(lapply(train.coords,FUN=function(x){x[[1]][,1]})))
-min.y<-min(unlist(lapply(train.coords,FUN=function(x){x[[1]][,2]})))
-
-train.win<-owin(xrange=c(min.x,max.x),yrange=c(min.y,max.y))
-
-train.psp<-as.psp(train.lines,W=train.win)
-
- # add the near train data to the merged dataset
-  merged.data$near.train<-NA
-
-  # take a subset of the data that has valid GPS data
-  # and turn it into a SpatialPointsDataFrame, with projection information
-  only.gps<-subset(merged.data,!is.na(speed))
-  merged.data$easting<-NA
-  merged.data$northing<-NA
-  if (length(only.gps[,1])>0){
-    gps.spatial<-SpatialPointsDataFrame(cbind(only.gps$longitude,only.gps$latitude)
-                                        ,data=only.gps,proj4string = CRS("+proj=longlat +datum=WGS84"))
-
-
-    # convert gps.spatial to have the same projection as the train.lines data
-    gps.spatial<-spTransform(gps.spatial,CRS(proj4string(train.lines)))
-
-    #creates a bounding box around the points (ppp's need these)
-    gps.win<-owin(xrange=c(min(coordinates(gps.spatial)[,1]-1000),max(coordinates(gps.spatial)[,1])+1000)
-                  ,yrange=c(min(coordinates(gps.spatial)[,2]-1000),max(coordinates(gps.spatial)[,2]+1000)))
-    # turns the gps data into a sptial point pattern
-    gps.ppp<-as.ppp(coordinates(gps.spatial),W=gps.win)
-
-
-    # the nncross function from spatstat gives you sitance from each point to the nearest line
-    merged.data$near.train[!is.na(merged.data$speed)]<-nncross(gps.ppp,train.psp)[,1]
-
-    merged.data$easting[!is.na(merged.data$longitude)]<-coordinates(gps.spatial)[,1]
-    merged.data$northing[!is.na(merged.data$longitude)]<-coordinates(gps.spatial)[,2]
-  }
-
-```
-
-### Distance 1 minute away
-
-When not travelling, people stay in one spot. To take this into consideration we include distance moved in the next minute and distance moved in the last minute. Both are included so that we can detect no movement both just as you stopped and just before you start moving too.
-
-``` {r dist to last}
-
-merged.data$dist.next.min<-distance.moved(dataset = merged.data,
-                                          last=FALSE,
-                                          time.window = 60,
-                                          epoch.length = 10)
-
-merged.data$dist.last.min<-distance.moved(dataset = merged.data,
-                                          last=TRUE,
-                                          time.window = 60,
-                                          epoch.length = 10)
-summary(merged.data)
-
-
-```
-
-
-### Calculating moving windows
-
-None of the previous functions remove invalid data from the dataset, they only set the relevant accelerometer or GPS variables as NA when we have reason to think they are untrustworthy. As a result the dataset is a continuous set of epochs from the start to end of the data. We can therefore treat a moving window across the cleaned merged dataset as a time window, as long as we allow for how long each epoch represents.
-
-To calculate moving windows we use the *zoo* package, and particularly the *rollapply* function. Rollapply allows us to specify a function and then apply it across a window. We use a width of four minutes, centered on the point of interest, so here that is 25 epochs (12 before, 12 after, each 10 seconds plus the center point). All the functions are simple mean, sd or quantile, but with na.omit, so they ignore small numbers of NAs in the window. partial=TRUE means that if not all points in the 25 are there (e.g. it is the start or end of the dataset), the function is still applied to the remaining points. 
-
-```{r moving windows}
-rollavs<-rollav.calc
-
-```
-
-### Predicting to the example data
-
-Prediction to participants is simple once you have calculated the rolling means:
-
-```{r prediction}
-library(xgboost)
-
-set.seed(315)
-base.model<-randomForest(true.mode~ax1.mean+ax1.sd+ax1.cent.90+ax1.cent.10
-                         +spd.mean+spd.sd+spd.cent.90+spd.cent.10
-                         +sumsnr.mean+near.train.4min+dist.4min.lastmin+dist.4min.nextmin
-                         ,data=train.for.cv,importance=TRUE)
-
-merged.data$pred.mode<-predict(base.model,newdata = merged.data,type="response")
-summary(merged.data$pred.mode)
-plot(merged.data$longitude,merged.data$latitude,axes=FALSE,xlab="",ylab="",col=merged.data$pred.mode,pch=19)
-
-```
-
-
-
-## Train data
-
-If you are unaware of how to get hold of train data, one option is to use OpenStreetMap data, which you can access directly from R using the *osmdata* package, which has a good vignette here: https://cran.r-project.org/web/packages/osmdata/vignettes/osmdata.html
+This doesn't cover getting the neccessary data on train lines. As a start point, if you're in a UK institution there is lots of data freely available on Digimap. Another option is to use OpenStreetMap data, which you can access directly from R using the *osmdata* package, which has a good vignette here: https://cran.r-project.org/web/packages/osmdata/vignettes/osmdata.html
 
 Here is an example of how you can extract train data for London. We extract three separate slices of train data, rail lines, light rail lines and subway/underground lines, then combine them. If it is quite a large area that you need to extract ( e.g. the data for our study covers most of England and Wales), this will take a long time.
 
-```{r train lines}
+```{r train data examples}
 install.packages("osmdata", "magrittr", "raster")
 library(osmdata)
 library(magrittr)
@@ -295,3 +185,78 @@ plot(london.train.data, main="All Lines")
 
 ```
 
+For our project, we used a combination of OS Opendata and meridian 2 rail networks, which was combined in ArcGIS. Here I import that data into R using the the *sp* and *rgdal* packages into R of train lines, then convert the *SpatialLinesDataFrame* into a *psp* (a line segment pattern) so we can use the *spatstat* function *nncross* to measure distance from each point to the nearest train line. The near.train function takes a merged dataset and train line data and calls the *nncross* functions to measure distance from each point to the nearest trainline.
+
+
+``` {r train lines}
+library(sp)
+library(maptools)
+library(rgdal)
+library(spatstat)
+
+train.lines<-readOGR("C:/Duncan/Train lines","all_train_lines")
+
+train.coords<-coordinates(train.lines)
+max.x<-max(unlist(lapply(train.coords,FUN=function(x){x[[1]][,1]})))
+max.y<-max(unlist(lapply(train.coords,FUN=function(x){x[[1]][,2]})))
+min.x<-min(unlist(lapply(train.coords,FUN=function(x){x[[1]][,1]})))
+min.y<-min(unlist(lapply(train.coords,FUN=function(x){x[[1]][,2]})))
+
+train.win<-owin(xrange=c(min.x,max.x),yrange=c(min.y,max.y))
+
+train.psp<-as.psp(train.lines,W=train.win)
+
+merged.data<-near.train(dataset = merged.data
+                        , trainline.psp = train.psp
+                        , trainline.p4s = proj4string(train.lines))
+
+```
+
+
+
+### Distance 1 minute away
+
+When not travelling, people stay in one spot. To take this into consideration we include distance moved in the next minute and distance moved in the last minute. Both are included so that we can detect no movement both just as you stopped and just before you start moving too.
+
+``` {r dist to last}
+
+merged.data$dist.next.min<-distance.moved(dataset = merged.data,
+                                          last=FALSE,
+                                          time.window = 60,
+                                          epoch.length = 10)
+
+merged.data$dist.last.min<-distance.moved(dataset = merged.data,
+                                          last=TRUE,
+                                          time.window = 60,
+                                          epoch.length = 10)
+summary(merged.data)
+
+
+```
+
+
+### Calculating moving windows
+
+None of the previous functions remove invalid data from the dataset, they only set the relevant accelerometer or GPS variables as NA when we have reason to think they are untrustworthy. As a result the dataset is a continuous set of epochs from the start to end of the data. We can therefore treat a moving window across the cleaned merged dataset as a time window, as long as we allow for how long each epoch represents.
+
+To calculate moving windows we use the *zoo* package, and particularly the *rollapply* function. Rollapply allows us to specify a function and then apply it across a window. We use a width of four minutes, centered on the point of interest, so here that is 25 epochs (12 before, 12 after, each 10 seconds plus the center point). All the functions are simple mean, sd or quantile, but with na.omit, so they ignore small numbers of NAs in the window. partial=TRUE means that if not all points in the 25 are there (e.g. it is the start or end of the dataset), the function is still applied to the remaining points. 
+
+```{r moving windows}
+rollavs<-rollav.calc(dataset=merged.data)
+
+```
+
+### Predicting to the example data
+
+Prediction to participants is simple once you have calculated the rolling means:
+
+
+```{r prediction}
+
+
+rollavs$pred.mode<-predict(fitted.fullmod,newdata = as.matrix(pred.data(rollavs)),type="response")
+rollavs$pred.mode<-factor(rollavs$pred.mode, labels=c("cycle","stat","train","vehicle","walk"))
+summary(rollavs$pred.mode)
+plot(rollavs$easting,rollavs$northing,axes=FALSE,xlab="",ylab="",col=rollavs$pred.mode,pch=19)
+
+```

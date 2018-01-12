@@ -27,11 +27,11 @@ near.train<-function(dataset, trainline.psp, trainline.p4s){
   merged.data$northing<-NA
   if (length(only.gps[,1])>0){
     gps.spatial<-SpatialPointsDataFrame(cbind(only.gps$longitude,only.gps$latitude)
-                                        ,data=only.gps,proj4string = CRS(trainline.p4s))
+                                        ,data=only.gps,proj4string = CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"))
     
     
     # convert gps.spatial to have the same projection as the train.lines data
-    gps.spatial<-spTransform(gps.spatial,CRS(proj4string(train.lines)))
+    gps.spatial<-spTransform(gps.spatial,CRS(trainline.p4s))
     
     #creates a bounding box around the points (ppp's need these)
     gps.win<-owin(xrange=c(min(coordinates(gps.spatial)[,1]-1000),max(coordinates(gps.spatial)[,1])+1000)
