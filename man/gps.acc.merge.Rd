@@ -4,7 +4,8 @@
 \alias{gps.acc.merge}
 \title{Merging GPS and accelerometer files}
 \usage{
-gps.acc.merge(acc.data, gpsfile, participant.id, epoch.length, british.time)
+gps.acc.merge(acc.data, gpsfile, participant.id, epoch.length,
+  british.time = FALSE)
 }
 \arguments{
 \item{acc.data}{The accelerometer data to merge, processed with \code{\link{process.acc}}}
@@ -15,10 +16,8 @@ gps.acc.merge(acc.data, gpsfile, participant.id, epoch.length, british.time)
 
 \item{epoch.length}{epoch.length in seconds, currently, 5, 10 or 15 seconds only tested}
 
-\item{british.time}{whether or not we the study is in Britain, so we need to check if the data was collected
- within BST and adjust GPS UTC timings by 1hour
-
-1= need to account for BST, 0= do not}
+\item{british.time}{boolean, whether or not we the study is in Britain, so we need to check if the data was collected
+within BST and adjust GPS UTC timings by 1hour}
 }
 \description{
 Returns a data.frame with Accelerometer and GPS data merged by timestamp

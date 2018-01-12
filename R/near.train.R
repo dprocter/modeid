@@ -14,7 +14,7 @@
 #' 
 #' @export
 
-near.train<-function(dataset,trainline.psp, trainline.p4s){
+near.train<-function(dataset, trainline.psp, trainline.p4s){
   merged.data<-dataset
   ######################################
   # add the near train data to the merged dataset

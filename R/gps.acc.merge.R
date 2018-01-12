@@ -7,10 +7,9 @@
 #' @param epoch.length
 #' epoch.length in seconds, currently, 5, 10 or 15 seconds only tested
 #' @param british.time
-#' whether or not we the study is in Britain, so we need to check if the data was collected
+#' boolean, whether or not we the study is in Britain, so we need to check if the data was collected
 #'  within BST and adjust GPS UTC timings by 1hour
 #'
-#' 1= need to account for BST, 0= do not
 #'
 #' @details
 #' Currently only tested with Qstarz GPS device files. If you need other types contect the author
@@ -18,7 +17,7 @@
 #'
 #' @export
 gps.acc.merge<-function(acc.data, gpsfile, participant.id,
-                        epoch.length, british.time){
+                        epoch.length, british.time=FALSE){
   
   if (!file.exists(gpsfile)){
     print(paste("no gps file for",ids[i],sep=" "))
@@ -36,7 +35,7 @@ gps.acc.merge<-function(acc.data, gpsfile, participant.id,
         gps.data<-subset(gps.data,UTC.DATE!=" ")
         
         # checking whether the file is within BST and adjusting
-        if (british.time==1){
+        if (isTRUE(british.time)){
           BSTstarts<-c("25/03/2012 00:00:00", "31/03/2013 00:00:00","30/03/2014 00:00:00"
                        , "29/03/2015 00:00:00", "27/03/2016 00:00:00", "26/03/2017 00:00:00")
           BSTends<-c("28/10/2012 00:00:00", "27/10/2013 00:00:00", "26/10/2014 00:00:00"

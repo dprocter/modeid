@@ -19,6 +19,4 @@ Here we assume you have processed acceleormeter data using \code{\link{process.a
  
  This funciton then selects only the necessary variables for prediction, and outputs them as a matrix, 
  ready to be fed to a fitted xgboost model
- 
- @export
 }
