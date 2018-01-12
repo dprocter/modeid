@@ -17,7 +17,7 @@ gpsfile<-"C:/Duncan/ENABLE/BST/Example data/GPS/bob.csv"
 To use this example you will need quite a few packages installed. Going though it you can see where each is loaded. The modeid package is required throughout, and can be installed from github via a devtools function, install.github:
 
 ``` {r libraries, eval=FALSE}
-install.packages("devtools","zoo","randomForest","sp","rgdal","maptools","spatstat")
+install.packages("devtools","zoo","xgboost","moments","sp","rgdal","maptools","spatstat")
 library(devtools)
 install.githhub("dprocter/modeid",quiet=TRUE)
 ```
@@ -38,13 +38,13 @@ summary(training.data)
 
 ### Replicating our cross.validation
 
-The function *cross.validator* fits a number of random forest models to the subsets of the data you specify.
+The function *cross.validator* fits a number of xgboost models to the subsets of the data you specify.
 
 As you can see below you must first provide a dataset free from NAs, so we first kick out unused variables and then use na.omit to remove NAs
 
 *cross.validator* then requires the NA free dataste, the formula of the model you wish to repeatedly fit, and a marker to denote the cross-validation subsets. We simply randomly assigned each participant to one of 5 subsets, see ?sample for random number selection
 
-*cross.validator* currently has horrible looking output, which consists of 4 columns (the fitted models, the test data.frames, the confusion matrices and model accuracy scores). The rows correspond to the cross-validation subsets, so in our example there will be 5. This will be tidied in future versions. 
+*cross.validator* currently has horrible looking output, which consists of 3 columns of lists (the fitted models, the confusion matrices and model accuracy scores). The rows correspond to the cross-validation subsets, so in our example there will be 5. This will be tidied in future versions. 
 
 We use set.seed to give the randomness a start point, but we cannot account for all of it in the cross-validation. Therefor, the output will slightly disagree with our reported scores. It also needs to be linked back to the original training data to include points we couldn't predict to (variables contained NAs), as errors, though these are tiny in number (under 100 points)
 
@@ -75,53 +75,49 @@ model.acc(cv.overall)
 
 Let us assume:
 
-1. You have Accelerometer files which have been exported to whatever epoch length you used e.g. 10 seconds.
+1. You have raw actigraph Accelerometer files, exported to .csv, with headers and without timestamps
 
 2. You have corresponding GPS data
 
+### Processing the Accelerometer data
+
+The first thing is to process the acceleormeter data and summarise to epochs. This is quite a time consuming step, because a week of accelerometer data at 30Hz contains approx 19million rows of data, which we need to summarise. We call the GGIR package to calibrate the accelerometer data and assess non-wear time.
+
+Here I have assigned accfile to the path to the accelerometer file on my computer, replace it is with the path to your accelerometer file
+
+```{r accelerometer processing}
+acc.data<-process.acc(accfile = accfile
+                      ,participant.id = "id1"
+                      ,cutoff.method = 3
+                      ,epoch.length = 10
+                      ,acc.model = "Actigraph"
+                      ,raw=TRUE
+                      ,samples.per.second = 30)
+```
+
 ### Merging accelerometer and GPS data
 
-First we need to merge the data together. The following takes accfile, and gpsfile, which I have assigned to the appropriate file paths. 
+Next we need to merge the accelerometer data with gps data, to create a single data-set. To do this again, 
 
-Cutoff.method = 3 means that we will cut the first day of data, then take 7 days of data, see ?gps.acc.merged for more details
+Cutoff.method = 3 means that we will cut the first day of data, then take 7 days of data, see ?gps.acc.merge for more details
 
-British.time=1 means that the data is from the UK, so we need to convert UTC time from the GPS unit to British Summer time, during the appropriate months, so it matches the correct accelerometer data.
+British.time=1 means that the data is from the UK, so we need to convert UTC time from the GPS unit to British Summer time, during the appropriate months, so it matches the correct accelerometer data. If you have data from elsewhere, with more adjustments to include, email dprocter@gmail.com, I can take that into account and update the function
 
 ```{r merging}
-merged.data<-gps.acc.merge(accfile = accfile
+merged.data<-gps.acc.merge(acc.data = acc.data
                           ,gpsfile = gpsfile
-                          ,participant.id = "bob"
-                          ,cutoff.method = 3
+                          ,participant.id = "id1"
                           ,epoch.length = 10
-                          ,british.time = 1
-                          ,acc.model = "Actigraph")
+                          ,british.time = 1)
 
 summary(merged.data)
 ```
 
-### Removing accelerometer non-wear time
 
-Accelerometer non-wear time will be identified as periods of 0 counts on all accelerometer axes.
-
-window.length specifies the width of the window in minutes
-
-interruption.length allows you to specify any allowed interruptions (epochs with over 0 counts), again in minutes
-
-The following code therefore identifies non-wear time in the dataset merged.data, where you require 1 hour of 0 counts to denote non-wear, and we allow 2 minutes of interruptions.
-
-All accelerometer axis data is set as NA where it seems to be non-wear
-
-```{r non-wear}
-merged.data<-acc.nonwear(dataset= merged.data
-                           ,epoch.length = 10
-                           ,window.length = 60
-                           ,interruption.length = 2)
-summary(merged.data)
-```
 
 ### Cleaning GPS data
 
-There are sevral circumstances is which GPS data can be unreliable (usually caused by poor signal). Therefore we remove points we do not think we can trust.
+There are several circumstances is which GPS data can be unreliable (usually caused by poor signal). Therefore we remove points we do not think we can trust.
 
 We clean the data in 3 ways:
 
@@ -131,19 +127,19 @@ We clean the data in 3 ways:
 
 3. By removing points that are isolated, and thefore have no context
 
-The following therefore marks all GPS data where speed is under 160kph, hdop is under 5, or there are less than 3 points within 5 minutes (2.5 minutes before and after the points, inluding the point itself, therefore 2 neighbours).
+The following therefore marks all GPS data where speed is under 200kph, hdop is under 5, or there are less than 3 points within 5 minutes (2.5 minutes before and after the points, inluding the point itself, therefore 2 neighbours).
 
-The data.loss.gps function tell you how many points are removed at each level of processing
+The *data.loss.gps* function tell you how many points are removed at each level of processing
 
 ```{r gps clean}
-data.loss.gps(speed.cutoff = 160
+data.loss.gps(speed.cutoff = 200
               ,hdop.cutoff = 5
               ,neighbour.number = 3
               ,neighbour.window = 300
               ,epoch.length = 10
               ,dataset = merged.data)
 
-merged.data<-gps.cleaner(speed.cutoff = 160
+merged.data<-gps.cleaner(speed.cutoff = 200
                          ,hdop.cutoff = 5
                          ,neighbour.number = 3
                          ,neighbour.window = 300
@@ -156,7 +152,7 @@ merged.data<-gps.cleaner(speed.cutoff = 160
 
 This doesn't cover getting the neccessary data on train lines. As a start point, if you're in a UK institution there is lots of data freely available on Digimap. 
 
-We use the sp and rgdal packages to import an ArcGIS shapefile into R of train lines, then convert the SpatialLinesDataFrame into a psp so we can use the spatstat function nncross to measure distance from each point to the nearest train line. For the participants data we make SpatialPointsDataFrame, then reproject it to OSGB1936, used by the train data, and then convert it into a ppp to allow us to use the spatstat function.
+We use the sp and rgdal packages to import an ArcGIS shapefile into R of train lines, then convert the *SpatialLinesDataFrame* into a *psp* (a line segment pattern) so we can use the *spatstat* function *nncross* to measure distance from each point to the nearest train line. For the participants data we make *SpatialPointsDataFrame*, then reproject it to OSGB1936, used by the train data, and then convert it into a *ppp* to allow us to use the spatstat function. This is a fairly convoluted method, but it works
 
 
 ``` {r train lines}
@@ -234,26 +230,10 @@ summary(merged.data)
 
 None of the previous functions remove invalid data from the dataset, they only set the relevant accelerometer or GPS variables as NA when we have reason to think they are untrustworthy. As a result the dataset is a continuous set of epochs from the start to end of the data. We can therefore treat a moving window across the cleaned merged dataset as a time window, as long as we allow for how long each epoch represents.
 
-To calculate moving windows we use the zoo package, and particularly the *rollapply* function. Rollapply allows us to specify a function and then apply it across a window. We use a width of four minutes, centered on the point of interest, so here that is 25 epochs (12 before, 12 after, each 10 seconds plus the center point). All the functions are simple mean, sd or quantile, but with na.omit, so they ignore small numbers of NAs in the window. partial=TRUE means that if not all pointsjion ;/ in the 25 are there (e.g. it is the start of the dataset), the function is still applied to the remaining points. 
+To calculate moving windows we use the *zoo* package, and particularly the *rollapply* function. Rollapply allows us to specify a function and then apply it across a window. We use a width of four minutes, centered on the point of interest, so here that is 25 epochs (12 before, 12 after, each 10 seconds plus the center point). All the functions are simple mean, sd or quantile, but with na.omit, so they ignore small numbers of NAs in the window. partial=TRUE means that if not all points in the 25 are there (e.g. it is the start or end of the dataset), the function is still applied to the remaining points. 
 
 ```{r moving windows}
-library(zoo)
-
-  merged.data$ax1.mean<-rollapply(merged.data$Axis1,width=25,align="center",FUN=function(x){mean(na.omit(x))},partial=TRUE,fill=NA)
-  merged.data$ax1.sd<-rollapply(merged.data$Axis1,width=25,align="center",FUN=function(x){sd(na.omit(x))},fill=NA,partial=TRUE)
-  merged.data$ax1.cent.10<-rollapply(merged.data$Axis1,width=25,align="center",FUN=function(x){quantile(x,0.1,na.rm = TRUE)},fill=NA,partial=TRUE)
-  merged.data$ax1.cent.90<-rollapply(merged.data$Axis1,width=25,align="center",FUN=function(x){quantile(x,0.9,na.rm = TRUE)},fill=NA,partial=TRUE)
-
-  merged.data$spd.mean<-rollapply(merged.data$speed,width=25,align="center",FUN=function(x){mean(na.omit(x))},fill=NA,partial=TRUE)
-  merged.data$spd.sd<-rollapply(merged.data$speed,width=25,align="center",FUN=function(x){sd(na.omit(x))},fill=NA,partial=TRUE)
-  merged.data$spd.cent.10<-rollapply(merged.data$speed,width=25,align="center",FUN=function(x){quantile(x,0.1,na.rm = TRUE)},fill=NA,partial=TRUE)
-  merged.data$spd.cent.90<-rollapply(merged.data$speed,width=25,align="center",FUN=function(x){quantile(x,0.9,na.rm = TRUE)},fill=NA,partial=TRUE)
-
-  merged.data$sumsnr.mean<-rollapply(merged.data$sumsnr,width=25,align="center",FUN=function(x){mean(na.omit(x))},fill=NA,partial=TRUE)
-  merged.data$near.train.4min<-rollapply(merged.data$near.train,width=25,align="center",FUN=function(x){mean(na.omit(x))},fill=NA,partial=TRUE)
-  
-    merged.data$dist.4min.lastmin<-rollapply(merged.data$dist.last.min,width=25,align="center",FUN=function(x){mean(na.omit(x))},fill=NA,partial=TRUE)
-      merged.data$dist.4min.nextmin<-rollapply(merged.data$dist.next.min,width=25,align="center",FUN=function(x){mean(na.omit(x))},fill=NA,partial=TRUE)
+rollavs<-rollav.calc
 
 ```
 
@@ -262,7 +242,7 @@ library(zoo)
 Prediction to participants is simple once you have calculated the rolling means:
 
 ```{r prediction}
-library(randomForest)
+library(xgboost)
 
 set.seed(315)
 base.model<-randomForest(true.mode~ax1.mean+ax1.sd+ax1.cent.90+ax1.cent.10
@@ -276,4 +256,42 @@ plot(merged.data$longitude,merged.data$latitude,axes=FALSE,xlab="",ylab="",col=m
 
 ```
 
+
+
+## Train data
+
+If you are unaware of how to get hold of train data, one option is to use OpenStreetMap data, which you can access directly from R using the *osmdata* package, which has a good vignette here: https://cran.r-project.org/web/packages/osmdata/vignettes/osmdata.html
+
+Here is an example of how you can extract train data for London. We extract three separate slices of train data, rail lines, light rail lines and subway/underground lines, then combine them. If it is quite a large area that you need to extract ( e.g. the data for our study covers most of England and Wales), this will take a long time.
+
+```{r train lines}
+install.packages("osmdata", "magrittr", "raster")
+library(osmdata)
+library(magrittr)
+library(sp)
+library(raster)
+
+
+p<- opq(bbox="London, UK") %>%
+  add_osm_feature(key = 'railway',value="rail")
+q<- opq(bbox="London, UK") %>%
+  add_osm_feature(key = 'railway',value="light_rail")
+r<- opq(bbox="London, UK") %>%
+    add_osm_feature(key = 'railway',value="subway")
+
+par(mfrow=c(2,2))
+p.train<-osmdata_sp(p)
+p.train<-p.train$osm_lines
+plot(p.train, main="Rail")
+q.train<-osmdata_sp(q)
+q.train<-q.train$osm_lines
+plot(q.train, main="Light Rail")
+r.train<-osmdata_sp(r)
+r.train<-r.train$osm_lines
+plot(r.train, "Undergound")
+
+london.train.data <- do.call(bind, list(q.train,p.train,r.train))
+plot(london.train.data, main="All Lines")
+
+```
 
