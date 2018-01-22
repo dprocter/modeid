@@ -29,6 +29,8 @@
 #' The proportion of data for xgboost toapply to each tree, smaller values reduce overfitting, default 0.2
 #' @param max.depth
 #' The maximum tree depth for xgboost, default is 10
+#' @param verbose
+#' What level of printed output you want. See ?xgboost for details, 1 is default, 0 is silent
 #' @return
 #' A four column matrix (I realise this is not terribly elegant, it will probably be changed).
 #' The rows contain different cross-validation subsets.
@@ -44,7 +46,7 @@
 
 ##########################
 cross.validator<-function(training.data, label ,cv.marker ,method ,threads=2, nrounds=10, eta=0.1, subsample=0.2, max.depth=10
-                   ,min_child_weight=1, gamma=1, seed=NULL){
+                   ,min_child_weight=1, gamma=1, seed=NULL, verbose=1){
   
   
   total.data<-training.data
@@ -82,13 +84,14 @@ cross.validator<-function(training.data, label ,cv.marker ,method ,threads=2, nr
         , threads=threads
         , num.class=nclass+1
         , objective = "multi:softmax"
-        , verbose=1
+        , verbose=verbose
         , nrounds=nrounds
         , eta=eta
         , subsample=subsample
         , max.depth=max.depth
         , min_child_weight=min_child_weight
         , gamma=gamma
+        , silent=TRUE
       )
       pred<-predict(fit[[i]],newdata=as.matrix(for.pred))
       pred<-factor(pred,labels=levels(factor(label)))

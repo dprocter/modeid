@@ -3,8 +3,8 @@ title: "modeid usage example"
 author: "Duncan Procter"
 date: "8 September 2017"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 
@@ -17,7 +17,7 @@ gpsfile<-"C:/Duncan/ENABLE/eg/i0437m1f1.csv"
 ```
 
 ## Requirements
-To use this example you will need quite a few packages installed. Going though it you can see where each is loaded. The modeid package is required throughout, and can be installed from github via a devtools function, install.github:
+To use this example you will need quite a few packages installed. Going though it you can see where each is loaded. The modeid package is required throughout, and can be installed from github via a devtools function, install_github:
 
 ``` {r libraries, eval=FALSE}
 install.packages("devtools","zoo","xgboost","moments","sp","rgdal","maptools","spatstat")
@@ -28,9 +28,8 @@ install_github("dprocter/modeid",quiet=TRUE)
 
 ## Training data
 
-How you extract your training data-set based on our rules will depend on how your demgraphic data is set up, providing an example of how we did it is not particularly useful. if you need help feel free to contact the author.
 
-We have privided an anonymised version of our training dataset, so you can see how we use it:
+We have privided an anonymised version of our training dataset, so you can see how we use it, and if you would like, fit different models to it:
 
 ```{r training data}
 library(modeid)
@@ -43,14 +42,23 @@ names(training.data)
 
 The function *cross.validator* fits a number of xgboost models to the subsets of the data you specify.
 
-As you can see below you must first provide a dataset free from NAs, so we first kick out unused variables and then use na.omit to remove NAs
+As you can see below you must first provide a dataset free from NAs, so we na.omit to remove NAs
 
-*cross.validator* then requires the NA free dataste, the formula of the model you wish to repeatedly fit, and a marker to denote the cross-validation subsets. We simply randomly assigned each participant to one of 5 subsets, see ?sample for random number selection
+*cross.validator* then requires the NA free dataset, the label variable (in our case the true mode), and a marker to denote the cross-validation subsets. We simply randomly assigned each participant to one of 5 subsets, see ?sample for random number selection
 
 *cross.validator* currently has horrible looking output, which consists of 3 columns of lists (the fitted models, the confusion matrices and model accuracy scores). The rows correspond to the cross-validation subsets, so in our example there will be 5. This will be tidied in future versions. 
 
-We use set.seed to give the randomness a start point, but we cannot account for all of it in the cross-validation. Therefor, the output will slightly disagree with our reported scores. It also needs to be linked back to the original training data to include points we couldn't predict to (variables contained NAs), as errors, though these are tiny in number (under 100 points)
+We use set.seed to give the randomness a start point and ensure output is replicable and set verbose=0 so that you don't get all of the xgboost output in this document, set verbose=1 if you want the training error per iteraction output.
 
+eta sets how conservative the algorithm should be. Here we set it lower than usual, at 0.1 (default 0.3), to avoid over-fitting to the trinaing data. 
+
+subsample = 0.2 means that we feed xgboost 20% of each cross-validation subset for each iteration, selected at random. This is essentially  a second level of cross-validation, again, avoiding overfitting to the trianing data
+
+Threads = 8 allows xgboost to use parralel computation, in the PC I ran this on I can run 8 threads at once so threads=8. If you have no idea what this means set threads as the number of cores your computer has, or 1 to not use parralel computation. 
+
+nrounds=200 means run 200 iterations per cross-validation subset. This is quite a high number, because we have set quite conservative parameters to stop over-fitting, so it needs time to optimally fit the model
+
+gamma=10 is another parameter to prevent over-fitting and make the algorithm conservative. default=1, we set it higher to make it more conservative. See ?xgboost for details.
 
 ```{r crossvalidation}
 
@@ -62,9 +70,12 @@ cv.model<-cross.validator(training.data = pred.data(train.for.cv)
                           , cv.marker = train.for.cv$cv.marker
                           , seed=315
                           , method = "xgboost"
+                          , eta = 0.1
+                          , subsample = 0.2
                           , threads=8
                           , nrounds=200
-                          , gamma=10)
+                          , gamma=10
+                          , verbose=0)
 
 overall.acc(cvd.model = cv.model
         , full.dataset = training.data)
@@ -80,31 +91,56 @@ Let us assume:
 
 2. You have corresponding GPS data
 
+If neither of these is true, but you'd like to make use of the algorithm, you probably need to contact the author, dprocter@gmail.com, and we will see what we can do
+
 ### Processing the Accelerometer data
 
-The first thing is to process the acceleormeter data and summarise to epochs. This is quite a time consuming step, because a week of accelerometer data at 30Hz contains approx 19million rows of data, which we need to summarise. We call the GGIR package to calibrate the accelerometer data and assess non-wear time.
+The first thing is to process the accelerometer data and summarise to epochs. This is quite a time consuming step, because a week of accelerometer data at 30Hz contains approx 19million rows of data, which we need to summarise. We call the GGIR package to calibrate the accelerometer data and assess non-wear time.
 
 Here I have assigned accfile to the path to the accelerometer file on my computer, replace it is with the path to your accelerometer file
 
-```{r accelerometer processing}
+see ?process.acc for full details of the parameters. Briefly:
+
+cutoff.method -  the trimmming of accelerometer data, if you want it cut to only 7 days for example, here 1 means don't trim it, see ?process.acc for more options
+
+epoch length - the length of epoch you want raw data summarised to, in seconds
+
+acc.model - the accelerometer model, this package can also merge data from Actiheart data to GPS, but it will not be able to make model predictions to that data. If you have another brand of acceleormeter, contact the package author, we would be happy to edit the package to process your data.
+
+raw - whether it is raw data, to predict the model to the data it needs to be raw
+
+samples.per.second - the sampling rate, 30Hz is standard for Actigraph GT3x I think
+
+nonwear - Whether you want non-wear time assess. This will call the GGIR package, if you want ot do this youself using GGIR or some other means set nonwear=FALSE. This step is quite time consuming, but that is not surprising, it is a huge amount to calculate.
+
+```{r accelerometer processing, eval=FALSE}
+
 acc.data<-process.acc(accfile = accfile
                       ,participant.id = "id1"
-                      ,cutoff.method = 3
+                      ,cutoff.method = 1
                       ,epoch.length = 10
                       ,acc.model = "Actigraph"
                       ,raw=TRUE
-                      ,samples.per.second = 30)
+                      ,samples.per.second = 30
+                      ,nonwear=TRUE)
+
+
 ```
 
+``` {r hiding laoding of relevant data, , include=FALSE}
+
+acc.data<-read.csv("C:/Duncan/ENABLE/eg/processed.acc.csv")
+
+```
 ### Merging accelerometer and GPS data
 
 Next we need to merge the accelerometer data with gps data, to create a single data-set. To do this again, 
 
-Cutoff.method = 3 means that we will cut the first day of data, then take 7 days of data, see ?gps.acc.merge for more details
 
-British.time=1 means that the data is from the UK, so we need to convert UTC time from the GPS unit to British Summer time, during the appropriate months, so it matches the correct accelerometer data. If you have data from elsewhere, with more adjustments to include, email dprocter@gmail.com, I can take that into account and update the function
+British.time=TRUE means that the data is from the UK, so we need to convert UTC time from the GPS unit to British Summer time, during the appropriate months, so it matches the correct accelerometer data. If you have data from elsewhere, with more adjustments to include, email dprocter@gmail.com, I can take that into account and update the function
 
 ```{r merging}
+
 merged.data<-gps.acc.merge(acc.data = acc.data
                           ,gpsfile = gpsfile
                           ,participant.id = "id1"
@@ -127,7 +163,7 @@ We clean the data in 3 ways:
 
 3. By removing points that are isolated, and thefore have no context
 
-The following therefore marks all GPS data where speed is under 200kph, hdop is under 5, or there are less than 3 points within 5 minutes (2.5 minutes before and after the points, inluding the point itself, therefore 2 neighbours).
+The following therefore marks all GPS data where speed is over 200kph, hdop is over 5, or there are less than 3 points within 5 minutes (2.5 minutes before and after the points, inluding the point itself, therefore 2 neighbours) as NA.
 
 The *data.loss.gps* function tell you how many points are removed at each level of processing
 
@@ -152,10 +188,15 @@ merged.data<-gps.cleaner(speed.cutoff = 200
 
 This doesn't cover getting the neccessary data on train lines. As a start point, if you're in a UK institution there is lots of data freely available on Digimap. Another option is to use OpenStreetMap data, which you can access directly from R using the *osmdata* package, which has a good vignette here: https://cran.r-project.org/web/packages/osmdata/vignettes/osmdata.html
 
+If you do not care about train travel, you can just create an empty variable called *near.train* which is entirely NA. Xgboost can predict ot data with NAs, and the train travel will most-likely come out as vehicle travel because of the similarity in speed.
+
 Here is an example of how you can extract train data for London. We extract three separate slices of train data, rail lines, light rail lines and subway/underground lines, then combine them. If it is quite a large area that you need to extract ( e.g. the data for our study covers most of England and Wales), this will take a long time.
 
-```{r train data examples}
+```{r packages to install, eval=FALSE}
 install.packages("osmdata", "magrittr", "raster")
+```
+
+```{r train data examples}
 library(osmdata)
 library(magrittr)
 library(sp)
@@ -178,14 +219,14 @@ q.train<-q.train$osm_lines
 plot(q.train, main="Light Rail")
 r.train<-osmdata_sp(r)
 r.train<-r.train$osm_lines
-plot(r.train, "Undergound")
+plot(r.train, main="Undergound")
 
 london.train.data <- do.call(bind, list(q.train,p.train,r.train))
 plot(london.train.data, main="All Lines")
 
 ```
 
-For our project, we used a combination of OS Opendata and meridian 2 rail networks, which was combined in ArcGIS. Here I import that data into R using the the *sp* and *rgdal* packages into R of train lines, then convert the *SpatialLinesDataFrame* into a *psp* (a line segment pattern) so we can use the *spatstat* function *nncross* to measure distance from each point to the nearest train line. The near.train function takes a merged dataset and train line data and calls the *nncross* functions to measure distance from each point to the nearest trainline.
+For our project, we used a combination of OS Opendata and meridian 2 rail networks, which was combined in ArcGIS. Here I import that data into R using the the *sp* and *rgdal* packages, then convert the *SpatialLinesDataFrame* into a *psp* (a line segment pattern) so we can use the *spatstat* function *nncross* to measure distance from each point to the nearest train line. The near.train function takes a merged dataset and train line data and calls the *nncross* functions to measure distance from each point to the nearest trainline.
 
 
 ``` {r train lines}
@@ -229,8 +270,6 @@ merged.data$dist.last.min<-distance.moved(dataset = merged.data,
                                           last=TRUE,
                                           time.window = 60,
                                           epoch.length = 10)
-summary(merged.data)
-
 
 ```
 
@@ -239,7 +278,7 @@ summary(merged.data)
 
 None of the previous functions remove invalid data from the dataset, they only set the relevant accelerometer or GPS variables as NA when we have reason to think they are untrustworthy. As a result the dataset is a continuous set of epochs from the start to end of the data. We can therefore treat a moving window across the cleaned merged dataset as a time window, as long as we allow for how long each epoch represents.
 
-To calculate moving windows we use the *zoo* package, and particularly the *rollapply* function. Rollapply allows us to specify a function and then apply it across a window. We use a width of four minutes, centered on the point of interest, so here that is 25 epochs (12 before, 12 after, each 10 seconds plus the center point). All the functions are simple mean, sd or quantile, but with na.omit, so they ignore small numbers of NAs in the window. partial=TRUE means that if not all points in the 25 are there (e.g. it is the start or end of the dataset), the function is still applied to the remaining points. 
+To calculate moving windows we use the *zoo* package, and particularly the *rollapply* function. Rollapply allows us to specify a function and then apply it across a window. We use a width of four minutes, centered on the point of interest. This is contained within the function *rollav.calc*, which takes a processed dataset, then calculates the necessary moving windows to fit a model.
 
 ```{r moving windows}
 rollavs<-rollav.calc(dataset=merged.data)
@@ -248,7 +287,7 @@ rollavs<-rollav.calc(dataset=merged.data)
 
 ### Predicting to the example data
 
-Prediction to participants is simple once you have calculated the rolling means:
+Prediction to participants is simple once you have calculated the rolling means, here we predict to this example file and then plot the points on a map coloured by travel mode. I have given minimal detail on where this is or a full legend, because this data is from a participant, and so I cannot make the coordinates freely available. 
 
 
 ```{r prediction}

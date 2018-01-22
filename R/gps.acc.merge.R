@@ -131,6 +131,8 @@ gps.acc.merge<-function(acc.data, gpsfile, participant.id,
         }
         
         return(merged.data)
+      } else{
+        print(paste(participant.id, "has no GPS data, ignoring", sep=" "))
       }
     } else{
       print(paste(participant.id, "has no GPS data, ignoring", sep=" "))

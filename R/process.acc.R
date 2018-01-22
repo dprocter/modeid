@@ -30,9 +30,13 @@
 #' , they can be included
 #'
 #' @export
-process.acc<-function(accfile, participant.id,
-                        cutoff.method, epoch.length,
-                        acc.model,raw=FALSE,samples.per.second=30){
+process.acc<-function(accfile
+                      , participant.id
+                      , cutoff.method
+                      , epoch.length
+                      , acc.model,raw=FALSE
+                      , samples.per.second=30
+                      , nonwear=TRUE){
   
   ###Accelerometer data
   if (acc.model=="Actigraph"){
@@ -40,7 +44,7 @@ process.acc<-function(accfile, participant.id,
       acc.data<-actigraph.getdata(accfile=accfile,epoch.length=epoch.length)
     } else{
       acc.data<-actigraph.getdata.raw(accfile=accfile,epoch.length=epoch.length,samples.per.second=samples.per.second
-                                      ,participant.id = participant.id)
+                                      ,participant.id = participant.id, nonwear=nonwear)
     }
     
   } else{
@@ -56,7 +60,7 @@ process.acc<-function(accfile, participant.id,
   acc.data$date.time.sec<-unclass(as.POSIXct(acc.data$date.time))
   
   if (cutoff.method==1) {
-    acc.data<-acc.data  #i.e. do nothing, just here to remond me of that
+    acc.data<-acc.data  #i.e. do nothing, just here to remind me of that
   }
   
   if (cutoff.method==2){
