@@ -8,7 +8,9 @@
 #' epoch.length in seconds, currently, 5, 10 or 15 seconds only tested
 #' @param british.time
 #' boolean, whether or not we the study is in Britain, so we need to check if the data was collected
-#'  within BST and adjust GPS UTC timings by 1hour
+#' within BST and adjust GPS UTC timings by 1hour
+#' @param UTC.offset
+#' Hours offset from UTC, e.g. 3 hours ahead, UTC.offset=3, 3 hours befind, UTC>off
 #'
 #'
 #' @details
@@ -17,7 +19,7 @@
 #'
 #' @export
 gps.acc.merge<-function(acc.data, gpsfile, participant.id,
-                        epoch.length, british.time=FALSE){
+                        epoch.length, british.time=FALSE, UTC.offset=0){
   
   if (!file.exists(gpsfile)){
     print(paste("no gps file for",ids[i],sep=" "))
@@ -33,6 +35,7 @@ gps.acc.merge<-function(acc.data, gpsfile, participant.id,
         gps.data$date.time<-paste(gps.data$UTC.DATE,gps.data$UTC.TIME)
         gps.data$date.time<-strptime(gps.data$date.time,format="%Y/%m/%d %H:%M:%S")
         gps.data<-subset(gps.data,UTC.DATE!=" ")
+        gps.data$date.time<-gps.data$date.time+(UTC.offset*36000)
         
         # checking whether the file is within BST and adjusting
         if (isTRUE(british.time)){
