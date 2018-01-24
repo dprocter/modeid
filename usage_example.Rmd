@@ -1,7 +1,7 @@
 ---
 title: "modeid usage example"
 author: "Duncan Procter"
-date: "8 September 2017"
+date: "24th January 2018"
 output:
   pdf_document: default
   html_document: default
@@ -10,6 +10,7 @@ output:
 
 ```{r setup, include=FALSE}
 .libPaths("C:/Duncan/R libraries")
+library(modeid)
 
 accfile<-"C:/Duncan/ENABLE/eg/i0437m1f1RAW.csv"
 gpsfile<-"C:/Duncan/ENABLE/eg/i0437m1f1.csv"
@@ -26,72 +27,16 @@ install_github("dprocter/modeid",quiet=TRUE)
 ```
 
 
-## Training data
-
-
-We have privided an anonymised version of our training dataset, so you can see how we use it, and if you would like, fit different models to it:
-
-```{r training data}
-library(modeid)
-training.data<-train.data
-names(training.data)
-
-```
-
-### Replicating our cross.validation
-
-The function *cross.validator* fits a number of xgboost models to the subsets of the data you specify.
-
-As you can see below you must first provide a dataset free from NAs, so we na.omit to remove NAs
-
-*cross.validator* then requires the NA free dataset, the label variable (in our case the true mode), and a marker to denote the cross-validation subsets. We simply randomly assigned each participant to one of 5 subsets, see ?sample for random number selection
-
-*cross.validator* currently has horrible looking output, which consists of 3 columns of lists (the fitted models, the confusion matrices and model accuracy scores). The rows correspond to the cross-validation subsets, so in our example there will be 5. This will be tidied in future versions. 
-
-We use set.seed to give the randomness a start point and ensure output is replicable and set verbose=0 so that you don't get all of the xgboost output in this document, set verbose=1 if you want the training error per iteraction output.
-
-eta sets how conservative the algorithm should be. Here we set it lower than usual, at 0.1 (default 0.3), to avoid over-fitting to the trinaing data. 
-
-subsample = 0.2 means that we feed xgboost 20% of each cross-validation subset for each iteration, selected at random. This is essentially  a second level of cross-validation, again, avoiding overfitting to the trianing data
-
-Threads = 8 allows xgboost to use parralel computation, in the PC I ran this on I can run 8 threads at once so threads=8. If you have no idea what this means set threads as the number of cores your computer has, or 1 to not use parralel computation. 
-
-nrounds=200 means run 200 iterations per cross-validation subset. This is quite a high number, because we have set quite conservative parameters to stop over-fitting, so it needs time to optimally fit the model
-
-gamma=10 is another parameter to prevent over-fitting and make the algorithm conservative. default=1, we set it higher to make it more conservative. See ?xgboost for details.
-
-```{r crossvalidation}
-
-train.for.cv<-training.data
-train.for.cv<-na.omit(train.for.cv)
-
-cv.model<-cross.validator(training.data = pred.data(train.for.cv)
-                          , label = train.for.cv$true.mode
-                          , cv.marker = train.for.cv$cv.marker
-                          , seed=315
-                          , method = "xgboost"
-                          , eta = 0.1
-                          , subsample = 0.2
-                          , threads=8
-                          , nrounds=200
-                          , gamma=10
-                          , verbose=0)
-
-overall.acc(cvd.model = cv.model
-        , full.dataset = training.data)
-
-```
-
 
 ## Data Processing
 
 Let us assume:
 
-1. You have raw actigraph Accelerometer files, exported to .csv, with headers and without timestamps
+1. You have raw ActiGraph accelerometer files, exported to .csv, with headers and without timestamps
 
 2. You have corresponding GPS data
 
-If neither of these is true, but you'd like to make use of the algorithm, you probably need to contact the author, dprocter@gmail.com, and we will see what we can do
+If either of these is untrue, but you'd like to make use of the algorithm, you probably need to contact the author, dprocter@gmail.com, and we will see what we can do
 
 ### Processing the Accelerometer data
 
@@ -111,9 +56,10 @@ raw - whether it is raw data, to predict the model to the data it needs to be ra
 
 samples.per.second - the sampling rate, 30Hz is standard for Actigraph GT3x I think
 
-nonwear - Whether you want non-wear time assess. This will call the GGIR package, if you want ot do this youself using GGIR or some other means set nonwear=FALSE. This step is quite time consuming, but that is not surprising, it is a huge amount to calculate.
+nonwear - Whether you want non-wear time assessed. This will call the GGIR package, if you want to do this yourself using GGIR or some other means set nonwear=FALSE. This step is quite time consuming, but that is not surprising, it is a huge amount to calculate.
 
 ```{r accelerometer processing, eval=FALSE}
+library(modeid)
 
 acc.data<-process.acc(accfile = accfile
                       ,participant.id = "id1"
@@ -145,7 +91,8 @@ merged.data<-gps.acc.merge(acc.data = acc.data
                           ,gpsfile = gpsfile
                           ,participant.id = "id1"
                           ,epoch.length = 10
-                          ,british.time = TRUE)
+                          ,british.time = TRUE
+                          ,UTC.offset = 0)
 
 ```
 
@@ -190,7 +137,7 @@ This doesn't cover getting the neccessary data on train lines. As a start point,
 
 If you do not care about train travel, you can just create an empty variable called *near.train* which is entirely NA. Xgboost can predict ot data with NAs, and the train travel will most-likely come out as vehicle travel because of the similarity in speed.
 
-Here is an example of how you can extract train data for London. We extract three separate slices of train data, rail lines, light rail lines and subway/underground lines, then combine them. If it is quite a large area that you need to extract ( e.g. the data for our study covers most of England and Wales), this will take a long time.
+Here is an example of how you can extract train data for London using osmdata. We extract three separate slices of train data, rail lines, light rail lines and subway/underground lines, then combine them. If it is quite a large area that you need to extract ( e.g. the data for our study covers most of England and Wales), this will take a long time.
 
 ```{r packages to install, eval=FALSE}
 install.packages("osmdata", "magrittr", "raster")
@@ -230,10 +177,10 @@ For our project, we used a combination of OS Opendata and meridian 2 rail networ
 
 
 ``` {r train lines}
-library(sp)
-library(maptools)
-library(rgdal)
-library(spatstat)
+library(sp, quietly = TRUE)
+library(maptools, quietly = TRUE)
+library(rgdal, quietly = TRUE)
+library(spatstat, quietly = TRUE)
 
 train.lines<-readOGR("C:/Duncan/Train lines","all_train_lines")
 
@@ -289,6 +236,8 @@ rollavs<-rollav.calc(dataset=merged.data)
 
 Prediction to participants is simple once you have calculated the rolling means, here we predict to this example file and then plot the points on a map coloured by travel mode. I have given minimal detail on where this is or a full legend, because this data is from a participant, and so I cannot make the coordinates freely available. 
 
+*fitted.fullmod* is the fitted model from our paper, which is cinluded within this package
+
 
 ```{r prediction}
 
@@ -299,3 +248,60 @@ summary(rollavs$pred.mode)
 plot(rollavs$easting,rollavs$northing,axes=FALSE,xlab="",ylab="",col=rollavs$pred.mode,pch=19)
 
 ```
+
+## Training data
+
+
+We have privided an anonymised version of our training dataset, so you can see how we use it, and if you would like, fit different models to it:
+
+```{r training data}
+training.data<-train.data
+names(training.data)
+
+```
+
+### Replicating our cross.validation
+
+The function *cross.validator* fits a number of xgboost models to the subsets of the data you specify.
+
+As you can see below you must first provide a dataset free from NAs, so we na.omit to remove NAs
+
+*cross.validator* then requires the NA free dataset, the label variable (in our case the true mode), and a marker to denote the cross-validation subsets. We simply randomly assigned each participant to one of 5 subsets, see ?sample for random number selection
+
+*cross.validator* currently has horrible looking output, which consists of 3 columns of lists (the fitted models, the confusion matrices and model accuracy scores). The rows correspond to the cross-validation subsets, so in our example there will be 5. This will be tidied in future versions. 
+
+We use set.seed to give the randomness a start point and ensure output is replicable and set verbose=0 so that you don't get all of the xgboost output in this document, set verbose=1 if you want the training error per iteraction output.
+
+eta sets how conservative the algorithm should be. Here we set it lower than usual, at 0.1 (default 0.3), to avoid over-fitting to the training data. 
+
+subsample = 0.2 means that we feed xgboost 20% of each cross-validation subset for each iteration, selected at random. This is essentially  a second level of cross-validation, again, avoiding overfitting to the trianing data
+
+Threads = 8 allows xgboost to use parralel computation, in the PC I ran this on I can run 8 threads at once so threads=8. If you have no idea what this means set threads as the number of cores your computer has, or 1 to not use parralel computation. 
+
+nrounds=200 means run 200 iterations per cross-validation subset. This is quite a high number, because we have set quite conservative parameters to stop over-fitting, so it needs time to optimally fit the model
+
+gamma=10 is another parameter to prevent over-fitting and make the algorithm conservative. default=1, we set it higher to make it more conservative. See ?xgboost for details.
+
+```{r crossvalidation}
+
+train.for.cv<-training.data
+train.for.cv<-na.omit(train.for.cv)
+
+cv.model<-cross.validator(training.data = pred.data(train.for.cv)
+                          , label = train.for.cv$true.mode
+                          , cv.marker = train.for.cv$cv.marker
+                          , seed=315
+                          , method = "xgboost"
+                          , eta = 0.1
+                          , subsample = 0.2
+                          , threads=8
+                          , nrounds=200
+                          , gamma=10
+                          , verbose=0)
+
+overall.acc(cvd.model = cv.model
+        , full.dataset = training.data)
+
+```
+
+
