@@ -45,8 +45,10 @@
 #'
 
 ##########################
-cross.validator<-function(training.data, label ,cv.marker ,method ,threads=2, nrounds=10, eta=0.1, subsample=0.2, max.depth=10
-                   ,min_child_weight=1, gamma=1, seed=NULL, verbose=1){
+cross.validator<-function(training.data, label ,cv.marker ,method ,threads=2, nrounds=10, eta=0.1
+                          , subsample=1, max.depth=10, eval_metric="merror", early_stopping_rounds = 50
+                          , colsample_bytree = 1
+                          ,min_child_weight=1, gamma=1, seed=NULL, verbose=1){
   
   
   total.data<-training.data
@@ -88,10 +90,12 @@ cross.validator<-function(training.data, label ,cv.marker ,method ,threads=2, nr
         , nrounds=nrounds
         , eta=eta
         , subsample=subsample
+        , colsample_bytree = colsample_bytree
+        , eval_metric = eval_metric
+        , early_stopping_rounds = early_stopping_rounds
         , max.depth=max.depth
         , min_child_weight=min_child_weight
         , gamma=gamma
-        , silent=TRUE
       )
       pred<-predict(fit[[i]],newdata=as.matrix(for.pred))
       pred<-factor(pred,labels=levels(factor(label)))
