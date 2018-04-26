@@ -1,4 +1,4 @@
-actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, participant.id, nonwear=TRUE, remove.gravity=TRUE){
+actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, participant.id, nonwear, remove.gravity=TRUE){
   
   ggir.calib<-GGIR::g.calibrate(accfile,windowsizes = c(epoch.length,900,3600),printsummary = FALSE)
   

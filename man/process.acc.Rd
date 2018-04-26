@@ -5,7 +5,7 @@
 \title{Prcoessing of accelerometer data files}
 \usage{
 process.acc(accfile, participant.id, cutoff.method, epoch.length, acc.model,
-  raw = FALSE, samples.per.second = 30)
+  raw = FALSE, samples.per.second = 30, nonwear = TRUE)
 }
 \arguments{
 \item{accfile}{The accelerometer file to merge, a .csv}

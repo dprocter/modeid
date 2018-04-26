@@ -29,6 +29,8 @@
 #' The proportion of data for xgboost toapply to each tree, smaller values reduce overfitting, default 0.2
 #' @param max.depth
 #' The maximum tree depth for xgboost, default is 10
+#' @param verbose
+#' What level of printed output you want. See ?xgboost for details, 1 is default, 0 is silent
 #' @return
 #' A four column matrix (I realise this is not terribly elegant, it will probably be changed).
 #' The rows contain different cross-validation subsets.
@@ -43,8 +45,10 @@
 #'
 
 ##########################
-cross.validator<-function(training.data, label ,cv.marker ,method ,threads=2, nrounds=10, eta=0.1, subsample=0.2, max.depth=10
-                   ,min_child_weight=1, gamma=1, seed=NULL){
+cross.validator<-function(training.data, label ,cv.marker ,method ,threads=2, nrounds=10, eta=0.1
+                          , subsample=1, max.depth=10, eval_metric="merror", early_stopping_rounds = 50
+                          , colsample_bytree = 1
+                          ,min_child_weight=1, gamma=1, seed=NULL, verbose=1){
   
   
   total.data<-training.data
@@ -70,7 +74,7 @@ cross.validator<-function(training.data, label ,cv.marker ,method ,threads=2, nr
     
     if (method=="randomForest"){
       fit[[i]]<-randomForest::randomForest(x=for.fitting,
-                                           y=label,importance=TRUE
+                                           y=reduced.train$true.mode,importance=TRUE
       )
       pred<-predict(fit[[i]],test)
     }
@@ -82,16 +86,71 @@ cross.validator<-function(training.data, label ,cv.marker ,method ,threads=2, nr
         , threads=threads
         , num.class=nclass+1
         , objective = "multi:softmax"
-        , verbose=1
+        , verbose=verbose
         , nrounds=nrounds
         , eta=eta
         , subsample=subsample
+        , colsample_bytree = colsample_bytree
+        , eval_metric = eval_metric
+        , early_stopping_rounds = early_stopping_rounds
         , max.depth=max.depth
         , min_child_weight=min_child_weight
         , gamma=gamma
       )
       pred<-predict(fit[[i]],newdata=as.matrix(for.pred))
       pred<-factor(pred,labels=levels(factor(label)))
+      
+    }
+    
+    if (method=="svm"){
+      fit[[i]]<-e1071::svm(x=as.matrix(for.fitting),
+                   y=reduced.train$true.mode,scale=TRUE
+      )
+      pred<-predict(fit[[i]],as.matrix(for.pred))
+    }
+    
+    if (method=="nbayes"){
+      quantiles<-apply(for.fitting,2,FUN=function(x) quantile(na.omit(x),probs = seq(0,1,0.1)))
+      quantiles[1,]<-(-1000)
+      quantiles[11,]<-100000
+      
+      
+      tr.q<-for.fitting
+      te.q<-for.pred
+      
+      for (j in 1:length(for.fitting[1,])){
+        tr.q[,j]<-cut(for.fitting[,j],breaks=quantiles[,j],labels = seq(1,10,1))
+        te.q[,j]<-cut(for.pred[,j],breaks=quantiles[,j],labels = seq(1,10,1))
+      }
+      tr.q$true.mode<-reduced.train$true.mode
+      
+      net<-bnlearn::naive.bayes(tr.q, "true.mode")
+      fit[[i]]<-bnlearn::bn.fit(net,data=tr.q)
+      
+      
+      pred<-predict(fit[[i]],data=te.q)
+      
+    }
+    
+    if (method=="lda"){
+      quantiles<-apply(for.fitting,2,FUN=function(x) quantile(na.omit(x),probs = seq(0,1,0.1)))
+      quantiles[1,]<-(-1000)
+      quantiles[11,]<-100000
+      
+      
+      tr.q<-for.fitting
+      te.q<-for.pred
+      
+      for (j in 1:length(for.fitting[1,])){
+        tr.q[,j]<-cut(for.fitting[,j],breaks=quantiles[,j],labels = seq(1,10,1))
+        te.q[,j]<-cut(for.pred[,j],breaks=quantiles[,j],labels = seq(1,10,1))
+      }
+      tr.q$true.mode<-reduced.train$true.mode
+      
+      fit[[i]]<-MASS::lda(true.mode~.,data=tr.q)
+      
+      lda.pred<-predict(fit[[i]],te.q)
+      pred<-lda.pred$class
       
     }
     
