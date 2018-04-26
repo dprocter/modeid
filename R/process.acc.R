@@ -1,5 +1,5 @@
 
-#' @title Prcoessing of accelerometer data files
+#' @title Processing of accelerometer data files
 #' @description Returns a data.frame with Accelerometer data summarised to a defined epoch
 #' @param accfile The accelerometer file to merge, a .csv
 #' @param participant.id
@@ -41,7 +41,9 @@ process.acc<-function(accfile
   ###Accelerometer data
   if (acc.model=="Actigraph"){
     if (raw==FALSE){
-      acc.data<-actigraph.getdata(accfile=accfile,epoch.length=epoch.length)
+      acc.data<-actigraph.getdata(accfile=accfile,epoch.length=epoch.length, nonwear=nonwear)
+      
+      
     } else{
       acc.data<-actigraph.getdata.raw(accfile=accfile,epoch.length=epoch.length,samples.per.second=samples.per.second
                                       ,participant.id = participant.id, nonwear=nonwear)

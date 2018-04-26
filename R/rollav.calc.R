@@ -78,8 +78,8 @@ rollav.calc<-function(dataset,acc=TRUE,gps=TRUE){
     input.data$near.train.4min<-zoo::rollapply(input.data$near.train,fill=NA,align="center",width=25
                                              ,partial=TRUE, FUN=function(x) mean(na.omit(x)))
     
-    input.data$dist.next.min<-distance.moved(dataset = input.data,last=FALSE,time.window = 60,epoch.length = 10)
-    input.data$dist.last.min<-distance.moved(dataset = input.data,last=TRUE, time.window = 60,epoch.length = 10)
+    input.data$dist.next.min<-modeid::distance.moved(dataset = input.data,last=FALSE,time.window = 60,epoch.length = 10)
+    input.data$dist.last.min<-modeid::distance.moved(dataset = input.data,last=TRUE, time.window = 60,epoch.length = 10)
     
     input.data$dist.next.4min<-zoo::rollapply(input.data$dist.next.min,fill=NA,align="center",width=25
                                            ,partial=TRUE, FUN=function(x) mean(na.omit(x)))

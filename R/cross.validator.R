@@ -72,7 +72,7 @@ cross.validator<-function(training.data, label ,cv.marker ,method ,threads=2, nr
     
     if (method=="randomForest"){
       fit[[i]]<-randomForest::randomForest(x=for.fitting,
-                                           y=label,importance=TRUE
+                                           y=reduced.train$true.mode,importance=TRUE
       )
       pred<-predict(fit[[i]],test)
     }
@@ -95,6 +95,58 @@ cross.validator<-function(training.data, label ,cv.marker ,method ,threads=2, nr
       )
       pred<-predict(fit[[i]],newdata=as.matrix(for.pred))
       pred<-factor(pred,labels=levels(factor(label)))
+      
+    }
+    
+    if (method=="svm"){
+      fit[[i]]<-e1071::svm(x=as.matrix(for.fitting),
+                   y=reduced.train$true.mode,scale=TRUE
+      )
+      pred<-predict(fit[[i]],as.matrix(for.pred))
+    }
+    
+    if (method=="nbayes"){
+      quantiles<-apply(for.fitting,2,FUN=function(x) quantile(na.omit(x),probs = seq(0,1,0.1)))
+      quantiles[1,]<-(-1000)
+      quantiles[11,]<-100000
+      
+      
+      tr.q<-for.fitting
+      te.q<-for.pred
+      
+      for (j in 1:length(for.fitting[1,])){
+        tr.q[,j]<-cut(for.fitting[,j],breaks=quantiles[,j],labels = seq(1,10,1))
+        te.q[,j]<-cut(for.pred[,j],breaks=quantiles[,j],labels = seq(1,10,1))
+      }
+      tr.q$true.mode<-reduced.train$true.mode
+      
+      net<-bnlearn::naive.bayes(tr.q, "true.mode")
+      fit[[i]]<-bnlearn::bn.fit(net,data=tr.q)
+      
+      
+      pred<-predict(fit[[i]],data=te.q)
+      
+    }
+    
+    if (method=="lda"){
+      quantiles<-apply(for.fitting,2,FUN=function(x) quantile(na.omit(x),probs = seq(0,1,0.1)))
+      quantiles[1,]<-(-1000)
+      quantiles[11,]<-100000
+      
+      
+      tr.q<-for.fitting
+      te.q<-for.pred
+      
+      for (j in 1:length(for.fitting[1,])){
+        tr.q[,j]<-cut(for.fitting[,j],breaks=quantiles[,j],labels = seq(1,10,1))
+        te.q[,j]<-cut(for.pred[,j],breaks=quantiles[,j],labels = seq(1,10,1))
+      }
+      tr.q$true.mode<-reduced.train$true.mode
+      
+      fit[[i]]<-MASS::lda(true.mode~.,data=tr.q)
+      
+      lda.pred<-predict(fit[[i]],te.q)
+      pred<-lda.pred$class
       
     }
     

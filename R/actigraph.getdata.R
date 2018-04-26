@@ -1,4 +1,4 @@
-actigraph.getdata<-function(accfile, epoch.length){
+actigraph.getdata<-function(accfile, epoch.length, nonwear){
 
   mode.df<-data.frame(seq(0,63,1))
   names(mode.df)<-"mode"
@@ -50,6 +50,34 @@ actigraph.getdata<-function(accfile, epoch.length){
 
 
   acc.data$date.time<-seq(start.datetime, start.datetime+(length(acc.data$Axis1)-1)*epoch.length, epoch.length)
+  
+  if(isTRUE(nonwear)){
+    acc.data$zeromarker<-acc.data$Axis1+acc.data$Axis2+acc.data$Axis3
+    acc.data$zeromarker[acc.data$zeromarker>0]<-(-1)
+    acc.data$zeromarker<-acc.data$zeromarker+1
+    acc.data$nonwear2<-zoo::rollapply(acc.data$zeromarker,FUN=sum,align="center", partial=TRUE,width=3600/epoch.length)
+    acc.data$nonwear<-0
+    acc.data$nonwear[acc.data$nonwear2>357]<-1
+    for (i in 1:length(acc.data$nonwear)){
+      j<-i-(1800/epoch.length)
+      if (j<1){j<-1}
+      if (acc.data$nonwear[i]==1){
+        acc.data$nonwear[j:i]<-1
+      }
+    }
+    for (i in length(acc.data$nonwear):1){
+      q<-i+(1800/epoch.length)
+      if (q>length(acc.data[,1])){
+        q<-length(acc.data[,1])
+      }
+      if (acc.data$nonwear[i]==1){
+        acc.data$nonwear[i:q]<-1
+      }
+    }
+    
+    acc.data<-subset(acc.data,select=-c(zeromarker, nonwear2))
+
+  }
 
   return(acc.data)
 }

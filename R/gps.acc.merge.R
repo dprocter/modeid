@@ -10,7 +10,7 @@
 #' boolean, whether or not we the study is in Britain, so we need to check if the data was collected
 #' within BST and adjust GPS UTC timings by 1hour
 #' @param UTC.offset
-#' Hours offset from UTC, e.g. 3 hours ahead, UTC.offset=3, 3 hours befind, UTC>off
+#' Hours offset from UTC, e.g. 3 hours ahead, UTC.offset=3, 3 hours behind, UTC=(-3)
 #'
 #'
 #' @details
