@@ -62,6 +62,15 @@ process.acc<-function(accfile
   #acc.data$ID<-participant.id
   #acc.data$date.time.sec<-unclass(as.POSIXct(acc.data$date.time))
   
+  acc.data$day.order<-numeric(length(acc.data[,1]))+1
+  for (j in 2:length(acc.data[,1])){
+    if (lubridate::wday(acc.data$date.time[j])!=lubridate::wday(acc.data$date.time[j-1])){
+      acc.data$day.order[j]<-acc.data$day.order[j-1]+1
+    } else{
+      acc.data$day.order[j]<-acc.data$day.order[j-1]
+    }
+  }
+  
   print("cutoff time")
   if (cutoff.method==1) {
     acc.data<-acc.data  #i.e. do nothing, just here to remind me of that
