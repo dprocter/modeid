@@ -48,7 +48,6 @@ process.acc<-function(accfile
       print("reading in raw accelerometer data")
       acc.data<-actigraph.getdata.raw(accfile=accfile,epoch.length=epoch.length,samples.per.second=samples.per.second
                                       ,participant.id = participant.id, nonwear=nonwear)
-      print("done")
     }
     
   } else{

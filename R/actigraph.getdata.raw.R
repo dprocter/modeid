@@ -32,6 +32,11 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
   blocks<-seq(1,n.blocks+1,1)
   # make a variable, with the row we want to start each block from
   start.markers<-seq(1,n.blocks*1.2e6+1,1.2e6)
+  #####
+  #EDITING 15/05/18
+  start.markers[2:length(start.markers)]<-start.markers[2:length(start.markers)]-1.2e5
+  rows.to.read<-numeric(length(start.markers))+1.32e6
+  rows.to.read[1]<-1.2e6
   
   # find out how many cores there are on the machine
   n.cores<-parallel::detectCores()
@@ -51,7 +56,7 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
   out<-foreach::foreach (i=1:length(blocks), .packages = c("modeid", "moments")) %dopar%{
 
     if (i <length(blocks)){
-      this.file<-read.csv(accfile, skip = 10+start.markers[i],nrows = 1.2e6 )
+      this.file<-read.csv(accfile, skip = 10+start.markers[i],nrows = rows.to.read[i] )
     } else{
       this.file<-read.csv(accfile, skip = 10+start.markers[i], nrows = -1 )
     }
@@ -75,16 +80,12 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
     this.file$vec.mag<-sqrt(this.file$Accelerometer.X^2+
                               this.file$Accelerometer.Y^2+
                               this.file$Accelerometer.Z^2)
-    
-    # calculate euclidean norm minus 1
-    ENMO<-wapply(this.file$vec.mag, epoch.width, FUN=mean ,by = epoch.width)
-    ENMO<-ENMO-1
-    ENMO[ENMO<0]<-0
+  
     
     if (isTRUE(remove.gravity)){
       ##############
       grav.adjuster<-function(x){
-        newgrav<-0.1*x+grav*0.90
+        newgrav<-0.05*x+grav*0.95
         grav<<-newgrav
         return(newgrav)
       }
@@ -108,6 +109,16 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
       
     } else{
     }
+    
+    if (i>1){
+      this.file<-this.file[120001:length(this.file[,1]),]
+    }
+    
+    # calculate euclidean norm minus 1
+    ENMO<-wapply(this.file$vec.mag, epoch.width, FUN=mean ,by = epoch.width)
+    ENMO<-ENMO-1
+    ENMO[ENMO<0]<-0
+    
     
     Axis1<-wapply(this.file$Accelerometer.X, epoch.width, FUN=mean ,by = epoch.width)
     raw.fft<-data.frame(Axis1)
@@ -184,8 +195,13 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
     raw.fft$cor.xz<-wapply.xy(x=this.file$Accelerometer.X,y=this.file$Accelerometer.Z,width=epoch.width,by=epoch.width,FUN=cor)
     raw.fft$cor.yz<-wapply.xy(x=this.file$Accelerometer.Y,y=this.file$Accelerometer.Z,width=epoch.width,by=epoch.width,FUN=cor)
     
-    # work out how many seconds you skip fromt he start to this blocl
-    current.sec.skip<-(start.markers[i]-1)/samples.per.second
+    # work out how many seconds you skip fromt he start to this block
+    if (i>1){
+      current.sec.skip<-(start.markers[i]-1+120000)/samples.per.second
+    } else{
+      current.sec.skip<-(start.markers[i]-1)/samples.per.second
+    }
+    
     # work out the start datetime of this block
     new.start<-start.datetime+current.sec.skip
     
@@ -194,8 +210,6 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
     raw.fft$id<-participant.id
     
     raw.fft$date.time.sec<-unclass(as.POSIXct(raw.fft$date.time))
-    
-    
     
     out[[i]]<-raw.fft
     
