@@ -50,6 +50,7 @@ actigraph.getdata<-function(accfile, epoch.length, nonwear){
 
 
   acc.data$date.time<-seq(start.datetime, start.datetime+(length(acc.data$Axis1)-1)*epoch.length, epoch.length)
+  acc.data$date.time.sec<-unclass(as.POSIXct(acc.data$date.time))
   
   if(isTRUE(nonwear)){
     acc.data$zeromarker<-acc.data$Axis1+acc.data$Axis2+acc.data$Axis3

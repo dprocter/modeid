@@ -2,7 +2,7 @@
 % Please edit documentation in R/process.acc.R
 \name{process.acc}
 \alias{process.acc}
-\title{Prcoessing of accelerometer data files}
+\title{Processing of accelerometer data files}
 \usage{
 process.acc(accfile, participant.id, cutoff.method, epoch.length, acc.model,
   raw = FALSE, samples.per.second = 30, nonwear = TRUE)

@@ -5,8 +5,10 @@
 \title{Model cross-validation}
 \usage{
 cross.validator(training.data, label, cv.marker, method, threads = 2,
-  nrounds = 10, eta = 0.1, subsample = 0.2, max.depth = 10,
-  min_child_weight = 1, gamma = 1, seed = NULL, verbose = 1)
+  nrounds = 10, eta = 0.1, subsample = 1, max.depth = 10,
+  eval_metric = "merror", early_stopping_rounds = 50,
+  colsample_bytree = 1, min_child_weight = 1, gamma = 1, seed = NULL,
+  verbose = 1)
 }
 \arguments{
 \item{training.data}{The data.frame of training data you want to cross-validate}

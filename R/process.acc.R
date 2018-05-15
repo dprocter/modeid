@@ -45,8 +45,10 @@ process.acc<-function(accfile
       
       
     } else{
+      print("reading in raw accelerometer data")
       acc.data<-actigraph.getdata.raw(accfile=accfile,epoch.length=epoch.length,samples.per.second=samples.per.second
                                       ,participant.id = participant.id, nonwear=nonwear)
+      print("done")
     }
     
   } else{
@@ -58,9 +60,10 @@ process.acc<-function(accfile
     }
   }
   
-  acc.data$ID<-participant.id
-  acc.data$date.time.sec<-unclass(as.POSIXct(acc.data$date.time))
+  #acc.data$ID<-participant.id
+  #acc.data$date.time.sec<-unclass(as.POSIXct(acc.data$date.time))
   
+  print("cutoff time")
   if (cutoff.method==1) {
     acc.data<-acc.data  #i.e. do nothing, just here to remind me of that
   }
@@ -83,6 +86,7 @@ process.acc<-function(accfile
   if (!is.null(acc.data$yearday)){
     acc.data<-subset(acc.data,select = -c(yearday))
   }
+  print("done")
   return(acc.data)
 }
 

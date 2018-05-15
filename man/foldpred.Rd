@@ -4,12 +4,10 @@
 \alias{foldpred}
 \title{Predict modal travel mode from cross-validated model}
 \usage{
-foldpred(data, folds, model)
+foldpred(data, model)
 }
 \arguments{
 \item{data}{The data to predict to, make sure the correct variables are selected using \code{\link{pred.data}}}
-
-\item{folds}{The number of folds in the data i.e. if it is 5-fold CV, then 5}
 
 \item{model}{The cross-validated model, created with \code{\link{cross.validator}}}
 }

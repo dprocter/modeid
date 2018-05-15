@@ -13,4 +13,9 @@ Imports: lubridate
         , randomForest
         , xgboost
         , GGIR
+        , R.utils
+        , moments
+        , foreach
+        , parallel
+        , doParallel
 RoxygenNote: 6.0.1

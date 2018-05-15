@@ -3,20 +3,19 @@
 #' @description Returns a factor of the length of the data with predicted travel mode
 #' @param data
 #' The data to predict to, make sure the correct variables are selected using \code{\link{pred.data}}
-#' @param folds
-#'The number of folds in the data i.e. if it is 5-fold CV, then 5
 #' @param model
 #' The cross-validated model, created with \code{\link{cross.validator}}
 #' @return
 #' A factor variable of the same length as variables in the data, with predicted travel mode
 
 ##########################
-foldpred<-function(data, folds, model){
+foldpred<-function(data, model){
   
   Mode <- function(x) {
     ux <- unique(x)
     ux[which.max(tabulate(match(x, ux)))]
   }
+  folds<-length(model[,1])
   
   allpreds<-data.frame(numeric(length(data[,1])))
   for (i in 1:folds){
