@@ -18,4 +18,8 @@ Imports: lubridate
         , foreach
         , parallel
         , doParallel
+        , sp
+        , rgdal
+        , maptools
+        , spatstat
 RoxygenNote: 6.0.1
