@@ -132,5 +132,3 @@ process.folder<-function(folder_location){
   }
 }
 
-folder_location<-"C:/Users/dproc/Dropbox/laptrans/modeid wrapper folders"
-

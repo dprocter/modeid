@@ -13,8 +13,7 @@
 #'
 #' @export
 
-##################
-ug.journeys-function(dataset, station.ppp){
+ug.journeys<-function(dataset, station.ppp){
   bl<-dataset
   
   bl$ug.marker<-0
