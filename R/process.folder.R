@@ -1,7 +1,16 @@
+#' @title Process a folder containing accelerometer and GPS data
+#' @description writes a folder worth of .csv files of processed data
+#' @param folder_location the location fo the folders, the rest of the inputs have to ve edited in the input_options.csv in that folder
+#' @details
+#' Currently only tested with Qstarz GPS device files. If you need other types contect the author
+#' , they can be included with ease
+#'
+#' @export
+
 process.folder<-function(folder_location){
 
   # load input options file
-  input.options<-read.csv(paste(folder_location,"/input_options.csv",sep=""),stringsAsFactors = FALSE)[,1:2]
+  input.options<-read.csv(paste(folder_location,"/input_options.csv",sep=""),stringsAsFactors = FALSE)[,2:3]
   head(input.options)
   
   names(input.options)<-c("name","value")
@@ -44,14 +53,15 @@ process.folder<-function(folder_location){
   
   # crrently assuming shapefile
   if (isTRUE(train)){
-    train.data<-rgdal::readOGR(dsn = paste(folder_location,"/train line data")
-                               , layer = train.name
-                               , driver = "ESRI Shapefile")
+    train.data<-rgdal::readOGR(dsn = paste(folder_location,"/train line data",sep="")
+                               , layer = train.name)
     train.psp<-spatstat::as.psp(train.data)
   }
   
+  travel.mode<-as.logical(input.options$value[input.options$name=="travel.mode"][1])
+  
   # loop through accelerometer files and process them
-  for (i in 1:length(accelerometer.files)){
+  for (i in 1:3){
     
     if (!file.exists(paste(folder_location,"/gps data/",gps.prefix,id.list[i],gps.suffix,".csv",sep=""))){
       print(paste("There's no gps data for ",id.list[i],", so no processing will be done"))
@@ -72,7 +82,7 @@ process.folder<-function(folder_location){
                                  , british.time = british.time
                                  , UTC.offset = UTC.offset
                                   )
-      # check if they want the gps data cleaned, then clean it
+      # # check if they want the gps data cleaned, then clean it
       if (isTRUE(clean.gps)){
         input.data<-gps.cleaner(speed.cutoff = speed.cutoff
                                  , hdop.cutoff = hdop.cutoff
@@ -80,7 +90,7 @@ process.folder<-function(folder_location){
                                  , neighbour.window = neighbour.window
                                  , epoch.length = epoch.length
                                  , dataset = input.data)
-        
+
         # measure the quantities of data lost
         data.loss<-data.loss.gps(speed.cutoff = speed.cutoff
                                  , hdop.cutoff = hdop.cutoff
@@ -89,39 +99,39 @@ process.folder<-function(folder_location){
                                  , epoch.length = epoch.length
                                  , dataset = input.data)
         #write the data lost to file
-        write.csv(data.loss, paste(folder_location,"/data loss/",input.data$id[1],".csv",sep=""))
+        write.csv(data.loss, paste(folder_location,"/output/data loss/",input.data$id[1],".csv",sep=""))
       }
-      
+
       #check if they want distance to trian lines done, then do it
       if (isTRUE(train)){
         input.data<-near.train(dataset = input.data
-                                , trainline.psp = trainline.psp
-                                , trainline.p4s = sp::CRS(sp::proj4string(train.data)))
+                                , trainline.psp = train.psp
+                                , trainline.p4s = sp::proj4string(train.data))
       }
-      
+
       if (isTRUE(travel.mode)){
         # distance to the next minute away
         input.data$dist.next.min<-distance.moved(dataset = input.data,
                                                   last=FALSE,
                                                   time.window = 60,
                                                   epoch.length = 10)
-        
+
         # distance to the last minute
         input.data$dist.last.min<-distance.moved(dataset = input.data,
                                                   last=TRUE,
                                                   time.window = 60,
                                                   epoch.length = 10)
-        
+
         # calculate rolling averages
         input.data<-rollav.calc(dataset=input.data)
-        
+
         # predict travel mode, 5 modes
         input.data$pred.mode<-predict(fitted.fullmod,newdata = as.matrix(pred.data(input.data)),type="response")
-        input.data$pred.mode<-factor(input.data$pred.mode, labels=c("cycle","stat","train","vehicle","walk"))  
-        
+        input.data$pred.mode<-factor(input.data$pred.mode, labels=c("cycle","stat","train","vehicle","walk"))
+
         # predict travel mode, 6 modes
         input.data$bus.pred<-predict(fitted.busmod,newdata = as.matrix(pred.data(input.data)),type="response")
-        input.data$bus.pred<-factor(input.data$bus.pred, labels=c("bus","cycle","stat","train","vehicle","walk")) 
+        input.data$bus.pred<-factor(input.data$bus.pred, labels=c("bus","cycle","stat","train","vehicle","walk"))
       }
       
       # write processed data file
@@ -132,5 +142,5 @@ process.folder<-function(folder_location){
   }
 }
 
-folder_location<-"C:/Users/dproc/Dropbox/laptrans/modeid wrapper folders"
+
 
