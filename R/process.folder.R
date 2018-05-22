@@ -142,5 +142,8 @@ process.folder<-function(folder_location){
   }
 }
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 2b0b89bd0ecf670e78a3c752c156b69d262317f1
