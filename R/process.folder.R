@@ -15,7 +15,7 @@ process.folder<-function(folder_location){
   names(input.options)<-c("name","value")
   
   #list of accelerometer files
-  accelerometer.files<-dir(paste(folder_location,"/accelerometer data",sep=""), full.names=TRUE)[1:3]
+  accelerometer.files<-dir(paste(folder_location,"/accelerometer data",sep=""), full.names=TRUE)
   
   # extract accelerometer relevant commands
   acc.prefix<-as.character(input.options$value[input.options$name=="filename.prefix"][1])
