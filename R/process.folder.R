@@ -11,12 +11,11 @@ process.folder<-function(folder_location){
 
   # load input options file
   input.options<-read.csv(paste(folder_location,"/input_options.csv",sep=""),stringsAsFactors = FALSE)[,2:3]
-  head(input.options)
   
   names(input.options)<-c("name","value")
   
   #list of accelerometer files
-  accelerometer.files<-dir(paste(folder_location,"/accelerometer data",sep=""), full.names=TRUE)
+  accelerometer.files<-dir(paste(folder_location,"/accelerometer data",sep=""), full.names=TRUE)[1:3]
   
   # extract accelerometer relevant commands
   acc.prefix<-as.character(input.options$value[input.options$name=="filename.prefix"][1])
@@ -50,6 +49,8 @@ process.folder<-function(folder_location){
   train<-as.logical(input.options$value[input.options$name=="train"][1])
   train.name<-as.character(input.options$value[input.options$name=="train.name"][1])
   train.type<-as.character(input.options$value[input.options$name=="train.type"][1])
+  underground<-as.logical(input.options$value[input.options$name=="underground"][1])
+  station.name<-as.character(input.options$value[input.options$name=="station.name"][1])
   
   # crrently assuming shapefile
   if (isTRUE(train)){
@@ -58,10 +59,16 @@ process.folder<-function(folder_location){
     train.psp<-spatstat::as.psp(train.data)
   }
   
+  if (isTRUE(underground)){
+    station.data<-rgdal::readOGR(dsn = paste(folder_location,"/station data",sep="")
+                                 , layer = station.name)
+    station.ppp<-spatstat::as.ppp(station.data)
+  }
+  
   travel.mode<-as.logical(input.options$value[input.options$name=="travel.mode"][1])
   
   # loop through accelerometer files and process them
-  for (i in 1:3){
+  for (i in 1:length(accelerometer.files)){
     
     if (!file.exists(paste(folder_location,"/gps data/",gps.prefix,id.list[i],gps.suffix,".csv",sep=""))){
       print(paste("There's no gps data for ",id.list[i],", so no processing will be done"))
@@ -134,6 +141,11 @@ process.folder<-function(folder_location){
         input.data$bus.pred<-factor(input.data$bus.pred, labels=c("bus","cycle","stat","train","vehicle","walk"))
       }
       
+      if (isTRUE(underground)){
+        input.data$ug.marker<-ug.journeys(dataset=input.data, station.ppp=station.ppp)
+        input.data$ug.length<-input.data$ug.marker*input.data$time.since.last
+      }
+      
       # write processed data file
       write.csv(input.data, paste(folder_location,"/output/processed files/",input.data$id[1],".csv",sep=""))
     }
@@ -141,9 +153,3 @@ process.folder<-function(folder_location){
     
   }
 }
-
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 2b0b89bd0ecf670e78a3c752c156b69d262317f1
