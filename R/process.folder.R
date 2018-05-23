@@ -89,6 +89,8 @@ process.folder<-function(folder_location){
                                  , british.time = british.time
                                  , UTC.offset = UTC.offset
                                   )
+      
+      
       # # check if they want the gps data cleaned, then clean it
       if (isTRUE(clean.gps)){
         input.data<-gps.cleaner(speed.cutoff = speed.cutoff
@@ -107,6 +109,27 @@ process.folder<-function(folder_location){
                                  , dataset = input.data)
         #write the data lost to file
         write.csv(data.loss, paste(folder_location,"/output/data loss/",input.data$id[1],".csv",sep=""))
+        
+        
+        gps.data<-subset(input.data, !is.na(longitude))
+        spat<-sp::SpatialPointsDataFrame(cbind(gps.data$longitude, gps.data$latitude),
+                                         data=gps.data, proj4string = sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))
+        spat<-sp::spTransform(spat, CRSobj = sp::CRS("+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs "))
+        
+        input.data$easting<-NA
+        input.data$northing<-NA
+        input.data$easting[!is.na(input.data$latitude)]<-coordinates(spat)[,1]
+        input.data$northing[!is.na(input.data$latitude)]<-coordinates(spat)[,2]
+      } else{
+        gps.data<-subset(input.data, !is.na(longitude))
+        spat<-sp::SpatialPointsDataFrame(cbind(gps.data$longitude, gps.data$latitude),
+                                         data=gps.data, proj4string = sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))
+        spat<-sp::spTransform(spat, CRSobj = sp::CRS("+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs "))
+        
+        input.data$easting<-NA
+        input.data$northing<-NA
+        input.data$easting[!is.na(input.data$latitude)]<-coordinates(spat)[,1]
+        input.data$northing[!is.na(input.data$latitude)]<-coordinates(spat)[,2]
       }
 
       #check if they want distance to trian lines done, then do it
@@ -114,6 +137,8 @@ process.folder<-function(folder_location){
         input.data<-near.train(dataset = input.data
                                 , trainline.psp = train.psp
                                 , trainline.p4s = sp::proj4string(train.data))
+      } else{
+        input.data$near.train<-NA
       }
 
       if (isTRUE(travel.mode)){
@@ -134,11 +159,13 @@ process.folder<-function(folder_location){
 
         # predict travel mode, 5 modes
         input.data$pred.mode<-predict(fitted.fullmod,newdata = as.matrix(pred.data(input.data)),type="response")
-        input.data$pred.mode<-factor(input.data$pred.mode, labels=c("cycle","stat","train","vehicle","walk"))
+        sub.levels<-as.numeric(levels(factor(input.data$pred.mode)))
+        input.data$pred.mode<-factor(input.data$pred.mode, labels=c("cycle","stat","train","vehicle","walk")[sub.levels])
 
         # predict travel mode, 6 modes
         input.data$bus.pred<-predict(fitted.busmod,newdata = as.matrix(pred.data(input.data)),type="response")
-        input.data$bus.pred<-factor(input.data$bus.pred, labels=c("bus","cycle","stat","train","vehicle","walk"))
+        sub.levels<-as.numeric(levels(factor(input.data$bus.pred)))
+        input.data$bus.pred<-factor(input.data$bus.pred, labels=c("bus","cycle","stat","train","vehicle","walk")[sub.levels])
       }
       
       if (isTRUE(underground)){
