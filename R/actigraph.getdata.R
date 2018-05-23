@@ -1,4 +1,4 @@
-actigraph.getdata<-function(accfile, epoch.length, nonwear){
+actigraph.getdata<-function(accfile, epoch.length, nonwear, participant.id){
 
   mode.df<-data.frame(seq(0,63,1))
   names(mode.df)<-"mode"
@@ -75,10 +75,10 @@ actigraph.getdata<-function(accfile, epoch.length, nonwear){
         acc.data$nonwear[i:q]<-1
       }
     }
-    
     acc.data<-subset(acc.data,select=-c(zeromarker, nonwear2))
 
   }
+  acc.data$id<-participant.id
 
   return(acc.data)
 }
