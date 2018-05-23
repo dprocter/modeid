@@ -34,14 +34,15 @@ process.acc<-function(accfile
                       , participant.id
                       , cutoff.method
                       , epoch.length
-                      , acc.model,raw=FALSE
+                      , acc.model
+                      , raw=FALSE
                       , samples.per.second=30
                       , nonwear=TRUE){
   
   ###Accelerometer data
   if (acc.model=="Actigraph"){
     if (raw==FALSE){
-      acc.data<-actigraph.getdata(accfile=accfile,epoch.length=epoch.length, nonwear=nonwear)
+      acc.data<-actigraph.getdata(accfile=accfile,epoch.length=epoch.length, nonwear=nonwear, participant.id = participant.id)
       
       
     } else{
