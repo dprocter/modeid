@@ -40,7 +40,7 @@ output.summary<-function(folder_location){
           out.data$date<-aggregate(date.time~day,data=input.data, FUN=function(x) substr(x[2],start=1,stop=10))[,2]
           out.data$month<-lubridate::month(strptime(out.data$date, format="%Y-%m-%d"), label=TRUE)
           
-          out.data$total.epochs<-aggregate(pred.mode~day,data=input.data, FUN=length)[,2]
+          out.data$total.epochs<-aggregate(id~day,data=input.data, FUN=length)[,2]
           
           if (isTRUE(travel.modes)){
             input.data$marker<-0
