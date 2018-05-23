@@ -97,6 +97,7 @@ output.summary<-function(folder_location){
     }
     }
     
+    # error somewhere in here
     if (isTRUE(by.week)){
       
       id<-input.data$id[1]
