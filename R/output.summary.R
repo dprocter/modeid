@@ -42,53 +42,54 @@ output.summary<-function(folder_location){
           
           out.data$total.epochs<-aggregate(pred.mode~day,data=input.data, FUN=length)[,2]
           
-          input.data$marker<-0
-          input.data$marker[input.data$pred.mode=="walk" & !is.na(input.data$pred.mode)]<-1
-          out.data$walk<-aggregate(marker~day,data=input.data, FUN=sum)[,2]
-          
-          input.data$marker<-0
-          input.data$marker[input.data$pred.mode=="cycle" & !is.na(input.data$pred.mode)]<-1
-          out.data$cycle<-aggregate(marker~day,data=input.data, FUN=sum)[,2]
-          
-          input.data$marker<-0
-          input.data$marker[input.data$pred.mode=="vehicle" & !is.na(input.data$pred.mode)]<-1
-          out.data$vehicle<-aggregate(marker~day,data=input.data, FUN=sum)[,2]
-          
-          input.data$marker<-0
-          input.data$marker[input.data$pred.mode=="train" & !is.na(input.data$pred.mode)]<-1
-          out.data$train<-aggregate(marker~day,data=input.data, FUN=sum)[,2]
-          
-          input.data$marker<-0
-          input.data$marker[input.data$pred.mode=="stat" & !is.na(input.data$pred.mode)]<-1
-          out.data$stat<-aggregate(marker~day,data=input.data, FUN=sum)[,2]
+          if (isTRUE(travel.modes)){
+            input.data$marker<-0
+            input.data$marker[input.data$pred.mode=="walk" & !is.na(input.data$pred.mode)]<-1
+            out.data$walk<-aggregate(marker~day,data=input.data, FUN=sum)[,2]
+            
+            input.data$marker<-0
+            input.data$marker[input.data$pred.mode=="cycle" & !is.na(input.data$pred.mode)]<-1
+            out.data$cycle<-aggregate(marker~day,data=input.data, FUN=sum)[,2]
+            
+            input.data$marker<-0
+            input.data$marker[input.data$pred.mode=="vehicle" & !is.na(input.data$pred.mode)]<-1
+            out.data$vehicle<-aggregate(marker~day,data=input.data, FUN=sum)[,2]
+            
+            input.data$marker<-0
+            input.data$marker[input.data$pred.mode=="train" & !is.na(input.data$pred.mode)]<-1
+            out.data$train<-aggregate(marker~day,data=input.data, FUN=sum)[,2]
+            
+            input.data$marker<-0
+            input.data$marker[input.data$pred.mode=="stat" & !is.na(input.data$pred.mode)]<-1
+            out.data$stat<-aggregate(marker~day,data=input.data, FUN=sum)[,2]
+            
+          }
           
           if (!is.null(input.data$ug.length)){
             out.data$ug<-aggregate(ug.length~day, data=input.data, FUN=sum)[,2]/10
             out.data$total.epochs<-out.data$total.epochs+out.data$ug
-          } else{
-            out.data$ug<-NA
-          }
+          } 
           
         } else{
-          day<-input.data$day[1]
-          id<-input.data$id[1]
-          date<-substr(input.data$date.time[1],start=1,stop=10)
-          month<-lubridate::month(strptime(date, format="%Y-%m-%d"),label=TRUE)
-          total.epochs<-length(input.data[,1])
-          walk<-length(input.data[,1][input.data$pred.mode=="walk" &!is.na(input.data$pred.mode)])
-          cycle<-length(input.data[,1][input.data$pred.mode=="cycle" &!is.na(input.data$pred.mode)])
-          vehicle<-length(input.data[,1][input.data$pred.mode=="vehicle" &!is.na(input.data$pred.mode)])
-          train<-length(input.data[,1][input.data$pred.mode=="train" &!is.na(input.data$pred.mode)])
-          stat<-length(input.data[,1][input.data$pred.mode=="stat" &!is.na(input.data$pred.mode)])
-          if (!is.null(input.data$ug.length)){
-            ug<-sum(input.data$ug.length)/10
-            total.epochs<-total.epochs+ug
-          } else{
-            ug<-NA
-          }
           
-          out.data<-data.frame(day, id, date, month, total.epochs, walk, cycle
-                               , vehicle, train, stat, ug)
+          day<-input.data$day[1]
+          out.data<-data.frame(day)
+          out.data$id<-input.data$id[1]
+          out.data$date<-substr(input.data$date.time[1],start=1,stop=10)
+          out.data$month<-lubridate::month(strptime(date, format="%Y-%m-%d"),label=TRUE)
+          out.data$total.epochs<-length(input.data[,1])
+          if (isTRUE(travel.modes)){
+            out.data$walk<-length(input.data[,1][input.data$pred.mode=="walk" &!is.na(input.data$pred.mode)])
+            out.data$cycle<-length(input.data[,1][input.data$pred.mode=="cycle" &!is.na(input.data$pred.mode)])
+            out.data$vehicle<-length(input.data[,1][input.data$pred.mode=="vehicle" &!is.na(input.data$pred.mode)])
+            out.data$train<-length(input.data[,1][input.data$pred.mode=="train" &!is.na(input.data$pred.mode)])
+            out.data$stat<-length(input.data[,1][input.data$pred.mode=="stat" &!is.na(input.data$pred.mode)])
+            }
+          
+          if (!is.null(input.data$ug.length)){
+            out.data$ug<-sum(input.data$ug.length)/10
+            out.data$total.epochs<-out.data$total.epochs+out.data$ug
+          } 
           
         }
         write.csv(out.data,paste(folder_location, "/output/day files/", out.data$id[1],".csv", sep=""), row.names = FALSE)
@@ -97,25 +98,24 @@ output.summary<-function(folder_location){
     }
     
     if (isTRUE(by.week)){
+      
       id<-input.data$id[1]
-      date<-substr(input.data$date.time[1],start=1,stop=10)
-      month<-lubridate::month(strptime(date, format="%Y-%m-%d"),label=TRUE)
-      total.epochs<-length(input.data[,1])
-      walk<-length(input.data[,1][input.data$pred.mode=="walk" &!is.na(input.data$pred.mode)])
-      cycle<-length(input.data[,1][input.data$pred.mode=="cycle" &!is.na(input.data$pred.mode)])
-      vehicle<-length(input.data[,1][input.data$pred.mode=="vehicle" &!is.na(input.data$pred.mode)])
-      train<-length(input.data[,1][input.data$pred.mode=="train" &!is.na(input.data$pred.mode)])
-      stat<-length(input.data[,1][input.data$pred.mode=="stat" &!is.na(input.data$pred.mode)])
-      if (!is.null(input.data$ug.length)){
-        ug<-sum(input.data$ug.length)/10
-        total.epochs<-total.epochs+ug
-      } else{
-        ug<-NA
+      out.data<-data.frame(id)
+      out.data$date<-substr(input.data$date.time[1],start=1,stop=10)
+      out.data$month<-lubridate::month(strptime(date, format="%Y-%m-%d"),label=TRUE)
+      out.data$total.epochs<-length(input.data[,1])
+      if (isTRUE(travel.modes)){
+        out.data$walk<-length(input.data[,1][input.data$pred.mode=="walk" &!is.na(input.data$pred.mode)])
+        out.data$cycle<-length(input.data[,1][input.data$pred.mode=="cycle" &!is.na(input.data$pred.mode)])
+        out.data$vehicle<-length(input.data[,1][input.data$pred.mode=="vehicle" &!is.na(input.data$pred.mode)])
+        out.data$train<-length(input.data[,1][input.data$pred.mode=="train" &!is.na(input.data$pred.mode)])
+        out.data$stat<-length(input.data[,1][input.data$pred.mode=="stat" &!is.na(input.data$pred.mode)])
       }
       
-      out.data<-data.frame(id, date, month, total.epochs, walk, cycle
-                           , vehicle, train, stat, ug)
-      
+      if (!is.null(input.data$ug.length)){
+        out.data$ug<-sum(input.data$ug.length)/10
+        out.data$total.epochs<-out.data$total.epochs+out.data$ug
+      }
       write.csv(out.data, paste(folder_location, "/output/week files/", out.data$id[1],".csv", sep=""), row.names = FALSE)
       week.data<-rbind(week.data,out.data)
     }
