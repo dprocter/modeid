@@ -31,12 +31,13 @@ output.summary<-function(folder_location){
   clear.files<-as.logical(out.options$option[out.options$how.to.summarize=="clear.files"][1])
   
   if (isTRUE(clear.files)){
-    do.call(file.remove, list(dir(paste(folder_location,"/output/data loss",sep=""), full.names = TRUE)))
-    do.call(file.remove, list(dir(paste(folder_location,"/output/day files",sep=""), full.names = TRUE)))
-    do.call(file.remove, list(dir(paste(folder_location,"/output/processed files",sep=""), full.names = TRUE)))
-    do.call(file.remove, list(dir(paste(folder_location,"/output/shapefiles",sep=""), full.names = TRUE)))
-    do.call(file.remove, list(dir(paste(folder_location,"/output/summary files",sep=""), full.names = TRUE)))
-    do.call(file.remove, list(dir(paste(folder_location,"/output/week files",sep=""), full.names = TRUE)))
+    if (length(dir(paste(folder_location,"/output/data loss",sep=""), full.names = TRUE))>0){
+      do.call(file.remove, list(dir(paste(folder_location,"/output/data loss",sep=""), full.names = TRUE)))
+      do.call(file.remove, list(dir(paste(folder_location,"/output/day files",sep=""), full.names = TRUE)))
+      do.call(file.remove, list(dir(paste(folder_location,"/output/shapefiles",sep=""), full.names = TRUE)))
+      do.call(file.remove, list(dir(paste(folder_location,"/output/summary files",sep=""), full.names = TRUE)))
+      do.call(file.remove, list(dir(paste(folder_location,"/output/week files",sep=""), full.names = TRUE)))
+    }
   }
 
   
