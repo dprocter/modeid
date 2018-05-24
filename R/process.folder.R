@@ -48,7 +48,6 @@ process.folder<-function(folder_location){
   # extract train relevant variables
   train<-as.logical(input.options$value[input.options$name=="train"][1])
   train.name<-as.character(input.options$value[input.options$name=="train.name"][1])
-  train.type<-as.character(input.options$value[input.options$name=="train.type"][1])
 
   
   # crrently assuming shapefile

@@ -30,14 +30,13 @@ output.summary<-function(folder_location){
   # admin
   clear.files<-as.logical(out.options$option[out.options$how.to.summarize=="clear.files"][1])
   
+
+  
   if (isTRUE(clear.files)){
-    if (length(dir(paste(folder_location,"/output/data loss",sep=""), full.names = TRUE))>0){
-      do.call(file.remove, list(dir(paste(folder_location,"/output/data loss",sep=""), full.names = TRUE)))
       do.call(file.remove, list(dir(paste(folder_location,"/output/day files",sep=""), full.names = TRUE)))
       do.call(file.remove, list(dir(paste(folder_location,"/output/shapefiles",sep=""), full.names = TRUE)))
       do.call(file.remove, list(dir(paste(folder_location,"/output/summary files",sep=""), full.names = TRUE)))
       do.call(file.remove, list(dir(paste(folder_location,"/output/week files",sep=""), full.names = TRUE)))
-    }
   }
 
   
@@ -90,9 +89,6 @@ output.summary<-function(folder_location){
         input.data$mvpa.marker<-0
         input.data$mvpa.marker[input.data$Axis1>382]<-1
       }
-      
-      
-      
     }
     
     
@@ -134,10 +130,13 @@ output.summary<-function(folder_location){
             out.data$ug<-aggregate(ug.length~day, data=input.data, FUN=function(x) sum(na.omit(x)))[,2]/10
             out.data$total.epochs<-out.data$total.epochs+out.data$ug
           } 
-          if (isTRUE(activity)){
+          if (isTRUE(activity) & cut.points!="Raw"){
             out.data$sed<-aggregate(sed.marker~day, data=input.data, FUN=sum)[,2]
             out.data$light<-aggregate(light.marker~day, data=input.data, FUN=sum)[,2]
             out.data$mvpa<-aggregate(mvpa.marker~day, data=input.data, FUN=sum)[,2]
+          }
+          if (isTRUE(activity) & cut.points=="Raw"){
+            out.data$mean.ENMO<-aggregate(ENMO~day, data=input.data, FUN=mean)[,2]
           }
           
         } else{
@@ -161,10 +160,13 @@ output.summary<-function(folder_location){
             out.data$ug<-sum(na.omit(input.data$ug.length))/10
             out.data$total.epochs<-out.data$total.epochs+out.data$ug
           } 
-          if (isTRUE(activity)){
+          if (isTRUE(activity) & cut.points!="Raw"){
             out.data$sed<-sum(input.data$sed.marker)
             out.data$light<-sum(input.data$light.marker)
             out.data$mvpa<-sum(input.data$mvpa.marker)
+          }
+          if (isTRUE(activity) & cut.points=="Raw"){
+            out.data$mean.ENMO<-mean(input.data$ENMO)
           }
           
         }
@@ -192,10 +194,13 @@ output.summary<-function(folder_location){
           out.data$ug<-sum(na.omit(input.data$ug.length))/10
           out.data$total.epochs<-out.data$total.epochs+out.data$ug
         }
-        if (isTRUE(activity)){
+        if (isTRUE(activity) & cut.points!="Raw"){
           out.data$sed<-sum(input.data$sed.marker)
           out.data$light<-sum(input.data$light.marker)
           out.data$mvpa<-sum(input.data$mvpa.marker)
+        }
+        if (isTRUE(activity) & cut.points=="Raw"){
+          out.data$mean.ENMO<-mean(input.data$ENMO)
         }
         
         write.csv(out.data, paste(folder_location, "/output/week files/", out.data$id[1],".csv", sep=""), row.names = FALSE)
@@ -221,6 +226,17 @@ output.summary<-function(folder_location){
     write.csv(week.data,paste(folder_location, "/output/summary files/", "week_data.csv", sep=""), row.names = FALSE)
   }
   
+  if(length(dir(paste(folder_location,"/output/data loss",sep=""), full.names = TRUE))>0){
+    lost.data<-data.frame()
+    lost.files<-dir(paste(folder_location,"/output/data loss",sep=""), full.names = TRUE)
+    for (j in 1:length(lost.files)){
+      dl<-read.csv(lost.files[j])
+      lost.data<-rbind(lost.data, dl)
+    }
+    
+    write.csv(lost.data, paste(folder_location,"/output/summary files/data_loss.csv",sep=""), row.names = FALSE)
+  }
+  
+  }
   
   
-}

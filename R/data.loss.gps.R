@@ -43,7 +43,8 @@ data.loss.gps<-function(speed.cutoff, hdop.cutoff, neighbour.number, neighbour.w
                   ,highspeed,hdop)
   data.removed<-c(0,all.data-gps.data, gps.data-gps.no.neighbours
                   ,gps.no.neighbours-highspeed,highspeed-hdop)
+  id<-c(this.data$id[1],this.data$id[1],this.data$id[1],this.data$id[1],this.data$id[1])
 
-  return(data.frame(labels,data.amounts,data.removed))
+  return(data.frame(id,labels,data.amounts,data.removed))
 }
 
