@@ -49,8 +49,7 @@ process.folder<-function(folder_location){
   train<-as.logical(input.options$value[input.options$name=="train"][1])
   train.name<-as.character(input.options$value[input.options$name=="train.name"][1])
   train.type<-as.character(input.options$value[input.options$name=="train.type"][1])
-  underground<-as.logical(input.options$value[input.options$name=="underground"][1])
-  station.name<-as.character(input.options$value[input.options$name=="station.name"][1])
+
   
   # crrently assuming shapefile
   if (isTRUE(train)){
@@ -59,12 +58,7 @@ process.folder<-function(folder_location){
     train.psp<-spatstat::as.psp(train.data)
   }
   
-  if (isTRUE(underground)){
-    station.data<-rgdal::readOGR(dsn = paste(folder_location,"/station data",sep="")
-                                 , layer = station.name)
-    station.ppp<-spatstat::as.ppp(station.data)
-  }
-  
+
   travel.mode<-as.logical(input.options$value[input.options$name=="travel.mode"][1])
   
   # loop through accelerometer files and process them
@@ -110,26 +104,26 @@ process.folder<-function(folder_location){
         #write the data lost to file
         write.csv(data.loss, paste(folder_location,"/output/data loss/",input.data$id[1],".csv",sep=""))
         
-        
-        gps.data<-subset(input.data, !is.na(longitude))
-        spat<-sp::SpatialPointsDataFrame(cbind(gps.data$longitude, gps.data$latitude),
-                                         data=gps.data, proj4string = sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))
-        spat<-sp::spTransform(spat, CRSobj = sp::CRS("+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs "))
-        
         input.data$easting<-NA
         input.data$northing<-NA
-        input.data$easting[!is.na(input.data$latitude)]<-coordinates(spat)[,1]
-        input.data$northing[!is.na(input.data$latitude)]<-coordinates(spat)[,2]
+        gps.data<-subset(input.data, !is.na(longitude))
+        
+        if (length(gps.data[,1])>0){
+          spat<-sp::SpatialPointsDataFrame(cbind(gps.data$longitude, gps.data$latitude),
+                                           data=gps.data, proj4string = sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))
+          spat<-sp::spTransform(spat, CRSobj = sp::CRS("+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs "))
+          input.data$easting[!is.na(input.data$latitude)]<-coordinates(spat)[,1]
+          input.data$northing[!is.na(input.data$latitude)]<-coordinates(spat)[,2]
+        }
+        
       } else{
-        gps.data<-subset(input.data, !is.na(longitude))
-        spat<-sp::SpatialPointsDataFrame(cbind(gps.data$longitude, gps.data$latitude),
-                                         data=gps.data, proj4string = sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))
-        spat<-sp::spTransform(spat, CRSobj = sp::CRS("+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs "))
-        
-        input.data$easting<-NA
-        input.data$northing<-NA
-        input.data$easting[!is.na(input.data$latitude)]<-coordinates(spat)[,1]
-        input.data$northing[!is.na(input.data$latitude)]<-coordinates(spat)[,2]
+        if (length(gps.data[,1])>0){
+          spat<-sp::SpatialPointsDataFrame(cbind(gps.data$longitude, gps.data$latitude),
+                                           data=gps.data, proj4string = sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))
+          spat<-sp::spTransform(spat, CRSobj = sp::CRS("+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs "))
+          input.data$easting[!is.na(input.data$latitude)]<-coordinates(spat)[,1]
+          input.data$northing[!is.na(input.data$latitude)]<-coordinates(spat)[,2]
+        }
       }
 
       #check if they want distance to trian lines done, then do it
@@ -142,17 +136,17 @@ process.folder<-function(folder_location){
       }
 
       if (isTRUE(travel.mode)){
-        # distance to the next minute away
-        input.data$dist.next.min<-distance.moved(dataset = input.data,
-                                                  last=FALSE,
-                                                  time.window = 60,
-                                                  epoch.length = 10)
-
-        # distance to the last minute
-        input.data$dist.last.min<-distance.moved(dataset = input.data,
-                                                  last=TRUE,
-                                                  time.window = 60,
-                                                  epoch.length = 10)
+        # # distance to the next minute away
+        # input.data$dist.next.min<-distance.moved(dataset = input.data,
+        #                                           last=FALSE,
+        #                                           time.window = 60,
+        #                                           epoch.length = 10)
+        # 
+        # # distance to the last minute
+        # input.data$dist.last.min<-distance.moved(dataset = input.data,
+        #                                           last=TRUE,
+        #                                           time.window = 60,
+        #                                           epoch.length = 10)
 
         # calculate rolling averages
         input.data<-rollav.calc(dataset=input.data)
@@ -168,11 +162,7 @@ process.folder<-function(folder_location){
         input.data$bus.pred<-factor(input.data$bus.pred, labels=c("bus","cycle","stat","train","vehicle","walk")[sub.levels])
       }
       
-      if (isTRUE(underground)){
-        input.data$ug.marker<-ug.journeys(dataset=input.data, station.ppp=station.ppp)
-        input.data$ug.length<-input.data$ug.marker*input.data$time.since.last
-      }
-      
+
       # write processed data file
       write.csv(input.data, paste(folder_location,"/output/processed files/",input.data$id[1],".csv",sep=""))
     }

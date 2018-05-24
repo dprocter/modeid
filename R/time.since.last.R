@@ -1,5 +1,10 @@
 time.since.last<-function(datetime.variable,format){
-  time.base<-strptime(datetime.variable,format=format)
+  if (format=="DT"){
+    time.base<-datetime.variable
+  }else{
+    time.base<-strptime(datetime.variable,format=format)
+  }
+  
   time.base<-as.POSIXct(time.base)
   time.base<-unclass(time.base)
 

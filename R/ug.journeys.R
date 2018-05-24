@@ -15,11 +15,16 @@
 
 ug.journeys<-function(dataset, station.ppp){
   bl<-dataset
+  bl<-subset(bl, !is.na(easting))
   
   bl$ug.marker<-0
   
   bl.owin<-spatstat::owin(xrange=c(min(bl$easting),max(bl$easting)),yrange=c(min(bl$northing),max(bl$northing)))
   bl.ppp<-spatstat::ppp(bl$easting,bl$northing,window = bl.owin)
+  if (is.null(bl$time.since.late)){
+    bl$time.since.last<-time.since.last(bl$date.time,format="DT")
+  }
+  
   
   bl$dist.station<-nncross(bl.ppp,station.ppp)[,1]
   
@@ -30,7 +35,7 @@ ug.journeys<-function(dataset, station.ppp){
     }
     
     potential.end<-0
-    if (bl$bus.pred[j]=="train"){
+    if (bl$pred.mode[j]=="train"){
       potential.end<-1
     }
     if (bl$dist.station[j]<=200){
@@ -38,7 +43,7 @@ ug.journeys<-function(dataset, station.ppp){
     }
     
     potential.start<-0
-    if (bl$bus.pred[j-1]=="train"){
+    if (bl$pred.mode[j-1]=="train"){
       potential.start<-1
     }
     if (bl$dist.station[j-1]<=200){
