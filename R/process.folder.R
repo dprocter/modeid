@@ -111,8 +111,8 @@ process.folder<-function(folder_location){
           spat<-sp::SpatialPointsDataFrame(cbind(gps.data$longitude, gps.data$latitude),
                                            data=gps.data, proj4string = sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))
           spat<-sp::spTransform(spat, CRSobj = sp::CRS("+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs "))
-          input.data$easting[!is.na(input.data$latitude)]<-coordinates(spat)[,1]
-          input.data$northing[!is.na(input.data$latitude)]<-coordinates(spat)[,2]
+          input.data$easting[!is.na(input.data$latitude)]<-sp::coordinates(spat)[,1]
+          input.data$northing[!is.na(input.data$latitude)]<-sp::coordinates(spat)[,2]
         }
         
       } else{
@@ -120,8 +120,8 @@ process.folder<-function(folder_location){
           spat<-sp::SpatialPointsDataFrame(cbind(gps.data$longitude, gps.data$latitude),
                                            data=gps.data, proj4string = sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))
           spat<-sp::spTransform(spat, CRSobj = sp::CRS("+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs "))
-          input.data$easting[!is.na(input.data$latitude)]<-coordinates(spat)[,1]
-          input.data$northing[!is.na(input.data$latitude)]<-coordinates(spat)[,2]
+          input.data$easting[!is.na(input.data$latitude)]<-sp::coordinates(spat)[,1]
+          input.data$northing[!is.na(input.data$latitude)]<-sp::coordinates(spat)[,2]
         }
       }
 
