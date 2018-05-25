@@ -52,6 +52,7 @@ process.folder<-function(folder_location){
   
   # crrently assuming shapefile
   if (isTRUE(train)){
+    require(maptools)
     train.data<-rgdal::readOGR(dsn = paste(folder_location,"/train line data",sep="")
                                , layer = train.name)
     train.psp<-spatstat::as.psp(train.data)
