@@ -37,7 +37,8 @@ process.acc<-function(accfile
                       , acc.model
                       , raw=FALSE
                       , samples.per.second=30
-                      , nonwear=TRUE){
+                      , nonwear=TRUE
+                      , nonwear.method="ML"){
   
   ###Accelerometer data
   if (acc.model=="Actigraph"){
@@ -48,7 +49,7 @@ process.acc<-function(accfile
     } else{
       print("reading in raw accelerometer data")
       acc.data<-actigraph.getdata.raw(accfile=accfile,epoch.length=epoch.length,samples.per.second=samples.per.second
-                                      ,participant.id = participant.id, nonwear=nonwear)
+                                      ,participant.id = participant.id, nonwear=nonwear,nonwear.method=nonwear.method)
     }
     
   } else{

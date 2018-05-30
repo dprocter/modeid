@@ -1,4 +1,4 @@
-actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, participant.id, nonwear, remove.gravity=TRUE){
+actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, participant.id, nonwear, nonwear.method, remove.gravity=TRUE){
   
   require(foreach)
   
@@ -23,20 +23,20 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
   len.file<-len.file-unusable
   
   # count the number of 1.2 million length blocks we will need
-  n.blocks<-len.file%/%0.8e6
+  n.blocks<-len.file%/%0.6e6
   
   # count how big the last block will need to be to finish the file
-  leftovers<-len.file%%0.8e6
+  leftovers<-len.file%%0.6e6
   
   #make a variable called blocks, which goes from 1 to the last block
   blocks<-seq(1,n.blocks+1,1)
   # make a variable, with the row we want to start each block from
-  start.markers<-seq(1,n.blocks*0.8e6+1,0.8e6)
+  start.markers<-seq(1,n.blocks*0.6e6+1,0.6e6)
   #####
   #EDITING 15/05/18
   start.markers[2:length(start.markers)]<-start.markers[2:length(start.markers)]-1.2e5
-  rows.to.read<-numeric(length(start.markers))+1.32e6
-  rows.to.read[1]<-0.8e6
+  rows.to.read<-numeric(length(start.markers))+0.72e6
+  rows.to.read[1]<-0.6e6
   
   # find out how many cores there are on the machine
   n.cores<-parallel::detectCores()
@@ -221,20 +221,28 @@ actigraph.getdata.raw<-function(accfile, epoch.length, samples.per.second, parti
   
   if (nonwear==TRUE){
     print(paste(participant.id,"Summaries calculated, calculating nonwear"))
-    ggir.nonwear<-GGIR::g.getmeta(accfile,windowsizes = c(epoch.length,900,3600)
-                                  ,scale = ggir.calib$scale,offset = ggir.calib$offset)
-
-    metalong<-ggir.nonwear$metalong
-    metalong$timestamp<-strptime(metalong$timestamp,format="%Y-%m-%dT%H:%M:%S")
-    metalong$date.time.sec<-unclass(as.POSIXct(metalong$timestamp))
-
-    out.data$nonwear.marker<-numeric(length(out.data[,1]))
-    for (j in 1:(length(metalong[,1])-1)){
-      if (metalong$nonwearscore[j]>0){
-        out.data$nonwear.marker[out.data$date.time.sec>=metalong$date.time.sec[j] &
-                                  out.data$date.time.sec<metalong$date.time.sec[j+1]]<-1
+    if (nonwear.method=="GGIR"){
+      ggir.nonwear<-GGIR::g.getmeta(accfile,windowsizes = c(epoch.length,900,3600)
+                                    ,scale = ggir.calib$scale,offset = ggir.calib$offset)
+      
+      metalong<-ggir.nonwear$metalong
+      metalong$timestamp<-strptime(metalong$timestamp,format="%Y-%m-%dT%H:%M:%S")
+      metalong$date.time.sec<-unclass(as.POSIXct(metalong$timestamp))
+      
+      out.data$nonwear.marker<-numeric(length(out.data[,1]))
+      for (j in 1:(length(metalong[,1])-1)){
+        if (metalong$nonwearscore[j]>0){
+          out.data$nonwear.marker[out.data$date.time.sec>=metalong$date.time.sec[j] &
+                                    out.data$date.time.sec<metalong$date.time.sec[j+1]]<-1
+        }
       }
     }
+    
+    if (nonwear.method=="ML"){
+      out.data$nonwear.marker<-nw.predict(out.data)
+    }
+    
+    
 
     print(paste(participant.id,"Nonwear time assessed"))
   } else{

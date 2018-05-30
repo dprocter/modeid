@@ -89,6 +89,8 @@ output.summary<-function(folder_location){
         input.data$mvpa.marker<-0
         input.data$mvpa.marker[input.data$Axis1>382]<-1
       }
+      
+      
     }
     
     
@@ -134,6 +136,7 @@ output.summary<-function(folder_location){
             out.data$sed<-aggregate(sed.marker~day, data=input.data, FUN=sum)[,2]
             out.data$light<-aggregate(light.marker~day, data=input.data, FUN=sum)[,2]
             out.data$mvpa<-aggregate(mvpa.marker~day, data=input.data, FUN=sum)[,2]
+            out.data$mean.cpm<-aggregate(Axis~day, data=input.data, FUN=mean)[,2]
           }
           if (isTRUE(activity) & cut.points=="Raw"){
             out.data$mean.ENMO<-aggregate(ENMO~day, data=input.data, FUN=mean)[,2]
@@ -164,6 +167,7 @@ output.summary<-function(folder_location){
             out.data$sed<-sum(input.data$sed.marker)
             out.data$light<-sum(input.data$light.marker)
             out.data$mvpa<-sum(input.data$mvpa.marker)
+            out.data$mean.cpm<-mean(input.data$Axis1)
           }
           if (isTRUE(activity) & cut.points=="Raw"){
             out.data$mean.ENMO<-mean(input.data$ENMO)

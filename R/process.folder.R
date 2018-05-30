@@ -26,6 +26,7 @@ process.folder<-function(folder_location){
   raw<-as.logical(input.options$value[input.options$name=="raw"][1])
   samples.per.second<-as.numeric(input.options$value[input.options$name=="samples.per.second"][1])
   nonwear<-as.logical(input.options$value[input.options$name=="nonwear"][1])
+  nonwear.method<-as.character(input.options$value[input.options$name=="nonwear.method"][1])
   
   #extract id list from accelerometer files
   id.list<-gsub(".csv","",dir(paste(folder_location,"/accelerometer data",sep="")))
