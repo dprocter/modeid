@@ -136,17 +136,6 @@ process.folder<-function(folder_location){
       }
 
       if (isTRUE(travel.mode)){
-        # # distance to the next minute away
-        # input.data$dist.next.min<-distance.moved(dataset = input.data,
-        #                                           last=FALSE,
-        #                                           time.window = 60,
-        #                                           epoch.length = 10)
-        # 
-        # # distance to the last minute
-        # input.data$dist.last.min<-distance.moved(dataset = input.data,
-        #                                           last=TRUE,
-        #                                           time.window = 60,
-        #                                           epoch.length = 10)
 
         # calculate rolling averages
         input.data<-rollav.calc(dataset=input.data)

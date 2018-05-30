@@ -14,6 +14,7 @@
 #' @export
 
 ug.journeys<-function(dataset, station.ppp){
+  require(maptools)
   bl<-dataset
   bl<-subset(bl, !is.na(easting))
   
@@ -26,7 +27,7 @@ ug.journeys<-function(dataset, station.ppp){
   }
   
   
-  bl$dist.station<-nncross(bl.ppp,station.ppp)[,1]
+  bl$dist.station<-spatstat::nncross(bl.ppp,station.ppp)[,1]
   
   for (j in 2:length(bl[,1])){
     time.gap<-0
