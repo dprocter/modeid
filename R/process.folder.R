@@ -46,6 +46,16 @@ process.folder<-function(folder_location){
   neighbour.number<-as.numeric(input.options$value[input.options$name=="neighbour.number"][1])
   neighbour.window<-as.numeric(input.options$value[input.options$name=="neighbour.window"][1])
   
+  # check if files are to be cleared and clear the,
+  clear.files<-as.logical(input.options$value[input.options$name=="clear.files"][1])
+  
+  if (isTRUE(clear.files)){
+    do.call(file.remove, list(dir(paste(folder_location,"/output/processed files",sep=""), full.names = TRUE)))
+    do.call(file.remove, list(dir(paste(folder_location,"/output/data loss",sep=""), full.names = TRUE)))
+
+  }
+  }
+  
   # extract train relevant variables
   train<-as.logical(input.options$value[input.options$name=="train"][1])
   train.name<-as.character(input.options$value[input.options$name=="train.name"][1])
