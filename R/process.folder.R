@@ -52,8 +52,6 @@ process.folder<-function(folder_location){
   if (isTRUE(clear.files)){
     do.call(file.remove, list(dir(paste(folder_location,"/output/processed files",sep=""), full.names = TRUE)))
     do.call(file.remove, list(dir(paste(folder_location,"/output/data loss",sep=""), full.names = TRUE)))
-
-  }
   }
   
   # extract train relevant variables
