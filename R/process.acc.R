@@ -55,7 +55,7 @@ process.acc<-function(accfile
   } else{
     if (acc.model=="Actiheart"){
       #start.date<-actiheart.getmeta(accfile)
-      acc.data<-actiheart.getdata(accfile=accfile, epoch.length=epoch.length)
+      acc.data<-actiheart.getdata(accfile=accfile, epoch.length=epoch.length, participant.id = participant.id)
     } else{
       stop("Don't recognise the accelerometer model, currently only Actigraph and Actiheart are valid models")
     }

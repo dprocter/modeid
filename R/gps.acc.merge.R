@@ -22,7 +22,7 @@ gps.acc.merge<-function(acc.data, gpsfile, participant.id,
                         epoch.length, british.time=FALSE, UTC.offset=0){
   
   if (!file.exists(gpsfile)){
-    print(paste("no gps file for",ids[i],sep=" "))
+    print(paste("no gps file for",participant.id,sep=" "))
   } else{
     
     gps.data<-read.csv(gpsfile)
