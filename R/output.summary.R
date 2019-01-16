@@ -136,7 +136,7 @@ output.summary<-function(folder_location){
             out.data$sed<-aggregate(sed.marker~day, data=input.data, FUN=sum)[,2]
             out.data$light<-aggregate(light.marker~day, data=input.data, FUN=sum)[,2]
             out.data$mvpa<-aggregate(mvpa.marker~day, data=input.data, FUN=sum)[,2]
-            out.data$mean.cpm<-aggregate(Axis~day, data=input.data, FUN=mean)[,2]
+            out.data$mean.cpm<-aggregate(Axis1~day, data=input.data, FUN=mean)[,2]
           }
           if (isTRUE(activity) & cut.points=="Raw"){
             out.data$mean.ENMO<-aggregate(ENMO~day, data=input.data, FUN=mean)[,2]
