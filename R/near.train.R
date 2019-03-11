@@ -14,7 +14,7 @@
 #' 
 #' @export
 
-near.train<-function(dataset, trainline.psp, trainline.p4s){
+near.train<-function(dataset, trainline.psp, trainline.p4s, country){
   require(maptools)
   
   merged.data<-dataset
@@ -25,11 +25,13 @@ near.train<-function(dataset, trainline.psp, trainline.p4s){
   # take a subset of the data that has valid GPS data
   # and turn it into a SpatialPointsDataFrame, with projection information
   only.gps<-subset(merged.data,!is.na(speed))
-  merged.data$easting<-NA
-  merged.data$northing<-NA
-  if (length(only.gps[,1])>0){
+  if (length(only.gps[,1])>0 & country=="UK"){
+    
+    merged.data$easting<-NA
+    merged.data$northing<-NA
+    
     gps.spatial<-sp::SpatialPointsDataFrame(cbind(only.gps$longitude,only.gps$latitude)
-                                        ,data=only.gps,proj4string = sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"))
+                                              ,data=only.gps,proj4string = sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"))
     
     
     # convert gps.spatial to have the same projection as the train.lines data
@@ -47,6 +49,28 @@ near.train<-function(dataset, trainline.psp, trainline.p4s){
     
     merged.data$easting[!is.na(merged.data$longitude)]<-sp::coordinates(gps.spatial)[,1]
     merged.data$northing[!is.na(merged.data$longitude)]<-sp::coordinates(gps.spatial)[,2]
+  } else {
+      if (length(only.gps[,1])>0 & country!="UK"){
+      
+      gps.spatial<-sp::SpatialPointsDataFrame(cbind(only.gps$longitude,only.gps$latitude)
+                                              ,data=only.gps,proj4string = sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"))
+      
+      
+      
+      # turns the gps data into a sptial point pattern
+      gps.ppp<-spatstat::as.ppp(gps.spatial)
+      
+      
+      # the nncross function from spatstat gives you distance from each point to the nearest line
+      raw_dist<-spatstat::nncross(gps.ppp,trainline.psp)[,1]
+      
+      # this is a simplification of finding the long/lat of both each point and the nearest point of each line
+      # then measuring haversine distance. This conversion will be inaccurate for large distances, but the algorithm
+      # only cares about short distances
+      merged.data$near.train[!is.na(merged.data$speed)]<-asin(raw_dist)*0.016*6378100
+
+      
+    }
   }
   
   return(merged.data)

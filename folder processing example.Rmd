@@ -1,0 +1,149 @@
+---
+title: "Folder processing tutorial"
+author: "Duncan Procter"
+date: "30 January 2019"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+.libPaths("C:/Dunc/R test")
+```
+
+## Programs required
+
+To start you need to download and install R {\link{"https://www.r-project.org/"}}. I would also recommend RStudio {\link{}}, which is a much more user-friendly interface than base R. If you are able to I would also install RTools {\link{}}, which allows installation of the most up-to-date modeid package direct from github.
+
+Once all these are installed we can open a new R script and start downloading the necessary R packages to process the data
+
+```{r installation}
+install.packages("devtools")
+install_github("dprocter/modeid", dependencies = TRUE)
+
+```
+
+## Known errors at this point
+
+1. {JESS ERROR}
+Fix: This is usually because Rtools is not installed. If you don't want to install Rtools/cannot then you can download a .zip of the modeid package from here {LINK} then run the following code (including installation of a bunch of other required packages):
+
+You can also embed plots, for example:
+
+```{r fix1_example}
+install.packages("path/to/folder/modeid_01.zip", repos=NULL)
+install.packages(c("sp","maptools","rgeos", "spatstat","rgdal","xgboost","randomForest","moments","lubridate"
+                   , "zoo", "GGIR", "R.utils","foreach", "doParallel", "parallel"))
+```
+2. An error that says you do not have permission to install. This is related to whoever is in charge of your IT not allowing you to modify things in Program Files. YOu can get around it by creating a folder yourself somewhere you are allowed to access then using the following code at the top of your script:
+
+```{r fix2_example}
+.libPaths("/path/to/custom/folder") # Must use forward slashes, R doesn't like \
+```
+
+##Processing folders
+
+The most simple way to use the modeid package is to process an entire folder at once. To do this you need a folder stored somewhere which has the following structure
+
+base_folder
+  -accelerometer data
+  -gps data
+  -output
+    -data loss
+    -day files
+    -processed files
+    -shapefiles
+    -summary files
+    -week files
+  -station data
+  -train line data
+  input_options.csv
+  output_options.csv
+
+An enaxple folder stucture is available here {\link{}} with the required input_options.csv and output_options.csv files
+
+The name of the base folder is not relevant, the rest must be named exactly as above. With this folder structure accelerometer data can be placed in the self-named folder, gps data also in its folder. If you want travel mode predicted accelerometer data needs to be in raw format and you need some train line GIS data in the train line data folder. Currently the only supported data is an ESRI Shapefile. If you need/want it to use another data source for the train line data, contact the author dprocter@gmail.com, it is easy to edit.
+
+The station data is only required if you want the algorithm to spot potential underground journeys, otherwise the folder can be empty.
+
+All options on the specifics of the data can be input in the input_options.csv file, which will be read in in processing. Similarly all output options are specified in the output_options file.
+
+## Understanding input options
+
+The input_options.csv has the following options, which I hope the below explains. At all times what is written in each box must be exact; it will be read in as a character so any extra spaces will cause errors.
+
+# Accelerometer options
+
+1. filename.suffix/prefix - The processing assumes that all accelerometer and gps files have the participant id, or some other identifier in them. It uses this identifier to pull the correct files out of the accelerometer and gps file, so if there is are any extra things in the filename other than the identifier they need to be specified.
+
+e.g. participant "i001", filename "acci001RAW.csv", filename.prefix=acc, filename.suffix=RAW
+
+2. cutoff.method - if you want any trimming of what data is allowed. Currently three options, specified by entering 1, 2 or 3. Option 1 returns all available data, without any trimming. Option 2 takes 7 days data, starting at the first epoch. Option 3 checks how many days data there are: if there are over 8 days it removed the first then keeps seven days data, if there are 8 it trims only the first, if there are 7 or less days it keeps everything.
+
+3. epoch.length - The length of the window in seconds at which data is measured. For travel mode identification we used 10 second windows, so the identification algorithm is untested at any other length.
+
+4. acc.model - The brand of accelerometer. Currently the only options are Actigraph and Actiheart. We cannot predict travel mode from Actiheart files, but can process the files. If you want other models contact the author, incorporation shouldn't be problematic but I will need some example files to test.
+
+5. raw - TRUE/FALSE on whether you are using raw input files. Raw is required for travel mode identification. Files processed to epochs can still be merged to GPS data and PA classification can be done.
+
+6. samples.per.second - only relevant for raw data, the sampling rate the accelerometer. Default is 30.
+
+7. nonwear - TRUE/FALSE - do you want nonwear time identified
+
+8. nonwear.method - How to id nonwear. For raw data there are two options. Firstly GGIR, the package written by {\code{\link{GGIR}}}, which is the method I would recommend. There is also an option ML, which is a machine learning algorithm I am testing for the same purpose. It is not published and not ready for rigorous usage. For summarised epoch data nonwear will be identified as continuous hours of 0 activity on all axes of the accelerometer, allowing for two minutes of interruption in total. What is specified as nonwear.method will have no effect on epoch level data.
+
+# GPS options
+
+The output produced at the moment is a processed file containing both accelerometer, GPS data and travel mode (if required) for every input file. We also output the data removed due to GPS cleaning, a summary of travel modes/physical activity modes per day of the week and per week per participant, a shapefile of each participant's merged GPS/accelerometer data (where GPS data is valid), so they can be imported into GIS software and a combined file of all day and week summaries.
+
+
+# Raw data
+
+To process a folder of raw data simply run the following R code. I would recommend testing with a couple of files, processing raw accelerometer data is very time consuming and finding out the way you have run it is not what you want afterwards is a big waste of time.
+
+``` {r folder processing}
+process.folder("path/to/base_folder")
+```
+
+# Output options
+
+Once the files are summarised and clasisfied into travel modes, the package includes a useful function to make the output something easier to analyse. Output options can all be specified in the output_option.csv, in a similar manner to input_options.csv. Below is a list of the options which specify output:
+
+# Summarising options
+
+1. by.day - TRUE/FALSE - whether you want the output summarised by day of the week (counts of each travel mode/ PA level per day)
+
+2. by.week - TRUE/FALSE - whether you want the output summarised by day of the week (counts of each travel mode/ PA level per day)
+
+3. sumsnr.cutoff - a value of signal to noise ratio above which data should be kept. If all data is required input 0. The signal to noise ratio is a measure of gps signal quality, values greater than 250 have in the past been used to judge if a participant is indoors or outdoors.
+
+# Travel mode options
+
+4. travel.modes - TRUE/FALSE - whether or not you have travel modes to summarise
+
+5. six.modes - TRUE/FALSE - whether or not you have 6 modes (you used the model that includes bus). FALSE for the normal model
+
+6. underground - TRUE/FALSE - whether or not you want the algorithm to identify missed underground journeys. If true you must have a shapefile of underground stations in the appropriate file. THe algorithm will then identify when signal is lost within 200m of an underground station and regained within 200m of another underground station for any journey lasting less than 2 hours and more than two minutes. THis will be recorded as undergound in the summaries. 
+
+7. station.name - The name of the shapefile with underground station locations in it. Only need to edit if underground = TRUE
+
+# Activity
+
+8. activity - TRUE/FALSE - whether or not you want PA assessed. For summarised data this will return activity level at the set of cut point specified below as well as mean counts per minute. FOr raw data this mean return mean ENMO (euclidean norm minus one).
+
+9. act.cut.points - What cut point method you want used. Only relevant for non-raw data. Currently the only valid options are "Freedson" and "Evenson". Quite happy to include others, if you want them contact the author
+
+# Output
+
+10. write.shapefile - TRUE/FALSE - Whether or not you want a shapefile written for each file processed
+
+11. clear.files - TRUE/FALSE - Whether before creating new files the algorithm should delete any previous files from the folders. Best practice is to set to TRUE to ensure all files are created in the same way, set to FALSE to fill gaps.
+
+# Processing output
+
+Once the above options have been set in the required csv, creating specified output is as simple as the following line of code:
+
+``` {r folder processing}
+output.summary("path/to/base_folder")
+```

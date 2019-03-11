@@ -12,23 +12,27 @@ output.summary<-function(folder_location){
   out.options<-read.csv(paste(folder_location,"/output_options.csv", sep=""))
   
   # by hour/day/week
-  by.day<-as.logical(out.options$option[out.options$how.to.summarize=="by.day"][1])
-  by.week<-as.logical(out.options$option[out.options$how.to.summarize=="by.week"][1])
+  by.day<-as.logical(tolower(out.options$option[out.options$how.to.summarize=="by.day"][1]))
+  by.week<-as.logical(tolower(out.options$option[out.options$how.to.summarize=="by.week"][1]))
+  
+  #sumsnr_cutoff
+  sumsnr.cutoff<-as.numeric(out.options$option[out.options$how.to.summarize=="sumsnr.cutoff"][1])
+  
   # travel mode options
-  travel.modes<-as.logical(out.options$option[out.options$how.to.summarize=="travel.modes"][1])
-  six.modes<-as.logical(out.options$option[out.options$how.to.summarize=="six.modes"][1])
+  travel.modes<-as.logical(tolower(out.options$option[out.options$how.to.summarize=="travel.modes"][1]))
+  six.modes<-as.logical(tolower(out.options$option[out.options$how.to.summarize=="six.modes"][1]))
   
   # underground missed j identification
-  underground<-as.logical(out.options$option[out.options$how.to.summarize=="underground"][1])
+  underground<-as.logical(tolower(out.options$option[out.options$how.to.summarize=="underground"][1]))
   station.name<-as.character(out.options$option[out.options$how.to.summarize=="station.name"][1])
   
   # activity options
-  activity<-as.logical(out.options$option[out.options$how.to.summarize=="activity"][1])
+  activity<-as.logical(tolower(out.options$option[out.options$how.to.summarize=="activity"][1]))
   cut.points<-as.character(out.options$option[out.options$how.to.summarize=="act.cut.points"][1])
-  shapefile<-as.logical(out.options$option[out.options$how.to.summarize=="write.shapefile"][1])
+  shapefile<-as.logical(tolower(out.options$option[out.options$how.to.summarize=="write.shapefile"][1]))
   
   # admin
-  clear.files<-as.logical(out.options$option[out.options$how.to.summarize=="clear.files"][1])
+  clear.files<-as.logical(tolower(out.options$option[out.options$how.to.summarize=="clear.files"][1]))
   
 
   
@@ -59,7 +63,7 @@ output.summary<-function(folder_location){
   for (i in 1:length(processed.files)){
     
     input.data<-read.csv(processed.files[i])
-    input.data<-subset(input.data,!is.na(latitude))
+    input.data<-subset(input.data,!is.na(latitude) & sumsnr>=sumsnr.cutoff)
     input.data$dt.strp<-strptime(input.data$date.time, format="%Y-%m-%d %H:%M:%S")
     input.data$month<-lubridate::month(input.data$dt.strp, label=TRUE)
     
@@ -72,7 +76,7 @@ output.summary<-function(folder_location){
     }
       
     if (isTRUE(activity)){
-      if (cut.points=="Freedson"){
+      if (tolower(cut.points)=="freedson"){
         input.data$sed.marker<-0
         input.data$sed.marker[input.data$Axis1<=16]<-1
         input.data$light.marker<-0
@@ -81,7 +85,7 @@ output.summary<-function(folder_location){
         input.data$mvpa.marker[input.data$Axis1>325]<-1
       }
       
-      if (cut.points=="Evenson"){
+      if (tolower(cut.points)=="evenson"){
         input.data$sed.marker<-0
         input.data$sed.marker[input.data$Axis1<=16]<-1
         input.data$light.marker<-0
@@ -132,13 +136,13 @@ output.summary<-function(folder_location){
             out.data$ug<-aggregate(ug.length~day, data=input.data, FUN=function(x) sum(na.omit(x)))[,2]/10
             out.data$total.epochs<-out.data$total.epochs+out.data$ug
           } 
-          if (isTRUE(activity) & cut.points!="Raw"){
+          if (isTRUE(activity) & tolower(cut.points)!="raw"){
             out.data$sed<-aggregate(sed.marker~day, data=input.data, FUN=sum)[,2]
             out.data$light<-aggregate(light.marker~day, data=input.data, FUN=sum)[,2]
             out.data$mvpa<-aggregate(mvpa.marker~day, data=input.data, FUN=sum)[,2]
             out.data$mean.cpm<-aggregate(Axis1~day, data=input.data, FUN=mean)[,2]
           }
-          if (isTRUE(activity) & cut.points=="Raw"){
+          if (isTRUE(activity) & tolower(cut.points)=="raw"){
             out.data$mean.ENMO<-aggregate(ENMO~day, data=input.data, FUN=mean)[,2]
           }
           
@@ -163,13 +167,13 @@ output.summary<-function(folder_location){
             out.data$ug<-sum(na.omit(input.data$ug.length))/10
             out.data$total.epochs<-out.data$total.epochs+out.data$ug
           } 
-          if (isTRUE(activity) & cut.points!="Raw"){
+          if (isTRUE(activity) & tolower(cut.points)!="raw"){
             out.data$sed<-sum(input.data$sed.marker)
             out.data$light<-sum(input.data$light.marker)
             out.data$mvpa<-sum(input.data$mvpa.marker)
             out.data$mean.cpm<-mean(input.data$Axis1)
           }
-          if (isTRUE(activity) & cut.points=="Raw"){
+          if (isTRUE(activity) & tolower(cut.points)=="raw"){
             out.data$mean.ENMO<-mean(input.data$ENMO)
           }
           
@@ -198,12 +202,12 @@ output.summary<-function(folder_location){
           out.data$ug<-sum(na.omit(input.data$ug.length))/10
           out.data$total.epochs<-out.data$total.epochs+out.data$ug
         }
-        if (isTRUE(activity) & cut.points!="Raw"){
+        if (isTRUE(activity) & tolower(cut.points)!="raw"){
           out.data$sed<-sum(input.data$sed.marker)
           out.data$light<-sum(input.data$light.marker)
           out.data$mvpa<-sum(input.data$mvpa.marker)
         }
-        if (isTRUE(activity) & cut.points=="Raw"){
+        if (isTRUE(activity) & tolower(cut.points)=="raw"){
           out.data$mean.ENMO<-mean(input.data$ENMO)
         }
         

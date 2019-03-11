@@ -32,7 +32,7 @@ install_github("dprocter/modeid",quiet=TRUE)
 
 Let us assume:
 
-1. You have raw ActiGraph accelerometer files, exported to .csv, with headers and without timestamps
+1. You have raw ActiGraph accelerometer files, exported to .csv, with headers (column names) and without timestamps
 
 2. You have corresponding GPS data
 
@@ -40,9 +40,9 @@ If either of these is untrue, but you'd like to make use of the algorithm, you p
 
 ### Processing the Accelerometer data
 
-The first thing is to process the accelerometer data and summarise to epochs. This is quite a time consuming step, because a week of accelerometer data at 30Hz contains approx 19million rows of data, which we need to summarise. We call the GGIR package to calibrate the accelerometer data and assess non-wear time.
+The first thing is to process the accelerometer data and summarise to epochs. This is quite a time consuming step, because a week of accelerometer data at 30Hz contains approximately 19million rows of data, which we need to summarise. We call the GGIR package to calibrate the accelerometer data and assess non-wear time.
 
-Here I have assigned accfile to the path to the accelerometer file on my computer, replace it is with the path to your accelerometer file
+Here I have assigned accfile to the path to the accelerometer file on my computer, replace it with the path to your accelerometer file
 
 see ?process.acc for full details of the parameters. Briefly:
 

@@ -45,6 +45,8 @@ process.folder<-function(folder_location){
   hdop.cutoff<-as.numeric(input.options$value[input.options$name=="hdop.cutoff"][1])
   neighbour.number<-as.numeric(input.options$value[input.options$name=="neighbour.number"][1])
   neighbour.window<-as.numeric(input.options$value[input.options$name=="neighbour.window"][1])
+  ### EDITED 29 01 19
+  country<-as.character(input.options$value[input.options$name=="country"][1])
   
   # check if files are to be cleared and clear the,
   clear.files<-as.logical(input.options$value[input.options$name=="clear.files"][1])
@@ -59,7 +61,7 @@ process.folder<-function(folder_location){
   train.name<-as.character(input.options$value[input.options$name=="train.name"][1])
 
   
-  # crrently assuming shapefile
+  # currently assuming shapefile
   if (isTRUE(train)){
     require(maptools)
     train.data<-rgdal::readOGR(dsn = paste(folder_location,"/train line data",sep="")
@@ -113,33 +115,28 @@ process.folder<-function(folder_location){
         #write the data lost to file
         write.csv(data.loss, paste(folder_location,"/output/data loss/",input.data$id[1],".csv",sep=""))
         
-        input.data$easting<-NA
-        input.data$northing<-NA
-        gps.data<-subset(input.data, !is.na(longitude))
-        
-        if (length(gps.data[,1])>0){
-          spat<-sp::SpatialPointsDataFrame(cbind(gps.data$longitude, gps.data$latitude),
-                                           data=gps.data, proj4string = sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))
-          spat<-sp::spTransform(spat, CRSobj = sp::CRS("+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs "))
-          input.data$easting[!is.na(input.data$latitude)]<-sp::coordinates(spat)[,1]
-          input.data$northing[!is.na(input.data$latitude)]<-sp::coordinates(spat)[,2]
-        }
-        
-      } else{
-        if (length(gps.data[,1])>0){
-          spat<-sp::SpatialPointsDataFrame(cbind(gps.data$longitude, gps.data$latitude),
-                                           data=gps.data, proj4string = sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))
-          spat<-sp::spTransform(spat, CRSobj = sp::CRS("+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs "))
-          input.data$easting[!is.na(input.data$latitude)]<-sp::coordinates(spat)[,1]
-          input.data$northing[!is.na(input.data$latitude)]<-sp::coordinates(spat)[,2]
-        }
       }
+      
+      # convert to eastings/northings
+      input.data$easting<-NA
+      input.data$northing<-NA
+      gps.data<-subset(input.data, !is.na(longitude))
+      
+      if (country=="UK" & length(gps.data[,1])>0){
+        spat<-sp::SpatialPointsDataFrame(cbind(gps.data$longitude, gps.data$latitude),
+                                         data=gps.data, proj4string = sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "))
+        spat<-sp::spTransform(spat, CRSobj = sp::CRS("+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs "))
+        input.data$easting[!is.na(input.data$latitude)]<-sp::coordinates(spat)[,1]
+        input.data$northing[!is.na(input.data$latitude)]<-sp::coordinates(spat)[,2]
+      } 
+      
 
-      #check if they want distance to trian lines done, then do it
+      #check if they want distance to train lines done, then do it
       if (isTRUE(train)){
         input.data<-near.train(dataset = input.data
                                 , trainline.psp = train.psp
-                                , trainline.p4s = sp::proj4string(train.data))
+                                , trainline.p4s = sp::proj4string(train.data)
+                                , country = country)
       } else{
         input.data$near.train<-NA
       }
